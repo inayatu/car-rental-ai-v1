@@ -15,6 +15,7 @@
     "helmet": "*",
     "jsonwebtoken": "*",
     "mongoose": "*",
+    "swagger-ui-express": "*",
     "winston": "*",
     "zod": "*"
   }

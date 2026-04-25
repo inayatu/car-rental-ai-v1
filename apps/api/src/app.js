@@ -1,12 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const swaggerUi = require("swagger-ui-express");
 const authRoutes = require("./modules/auth/auth.routes");
 const carRoutes = require("./modules/cars/car.routes");
 const requestLogger = require("./middlewares/request-logger.middleware");
 const logger = require("./utils/logger");
 const connectDB = require("./config/db");
 const env = require("./config/env");
+const openApiSpec = require("./docs/openapi");
 
 const app = express();
 
@@ -18,6 +20,11 @@ app.use(requestLogger);
 app.get("/health", (_req, res) => {
   return res.status(200).json({ ok: true });
 });
+
+app.get("/api/docs.json", (_req, res) => {
+  return res.status(200).json(openApiSpec);
+});
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/cars", carRoutes);

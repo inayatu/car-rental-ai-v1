@@ -6,9 +6,6 @@ const router = express.Router();
 
 router.post("/", requireAuth(["owner"]), carController.createCar);
 router.get("/mine", requireAuth(["owner"]), carController.listMyCars);
-router.get("/:id", requireAuth(["owner"]), carController.getMyCarById);
-router.patch("/:id", requireAuth(["owner"]), carController.updateMyCar);
-router.delete("/:id", requireAuth(["owner"]), carController.deleteMyCar);
 
 router.get(
   "/moderation/pending",
@@ -18,5 +15,8 @@ router.get(
 router.post("/:id/verify", requireAuth(["admin", "govt_staff"]), carController.verifyCar);
 router.post("/:id/unverify", requireAuth(["admin", "govt_staff"]), carController.unverifyCar);
 router.post("/:id/blacklist", requireAuth(["admin", "govt_staff"]), carController.blacklistCar);
+router.get("/:id", requireAuth(["owner"]), carController.getMyCarById);
+router.patch("/:id", requireAuth(["owner"]), carController.updateMyCar);
+router.delete("/:id", requireAuth(["owner"]), carController.deleteMyCar);
 
 module.exports = router;
