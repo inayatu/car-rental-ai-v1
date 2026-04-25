@@ -23,6 +23,7 @@ const openApiSpec = {
     { name: "Health", description: "Service health checks" },
     { name: "Auth", description: "Authentication endpoints" },
     { name: "Uploads", description: "Two-phase upload session endpoints" },
+    { name: "Bookings", description: "Booking create/read/update/delete endpoints" },
     { name: "Cars", description: "Owner car management endpoints" },
     {
       name: "Car Moderation",
@@ -224,6 +225,51 @@ const openApiSpec = {
           sizeBytes: { type: "integer", example: 243829 },
         },
       },
+      CreateBookingRequest: {
+        type: "object",
+        required: ["carId", "startDate", "endDate"],
+        properties: {
+          carId: { type: "string" },
+          startDate: { type: "string", format: "date-time" },
+          endDate: { type: "string", format: "date-time" },
+        },
+      },
+      UpdateBookingRequest: {
+        type: "object",
+        properties: {
+          status: {
+            type: "string",
+            enum: ["accepted", "rejected", "cancelled", "completed"],
+          },
+          cancellationReason: { type: "string" },
+          note: { type: "string" },
+        },
+      },
+      Booking: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          carId: { type: "string" },
+          ownerId: { type: "string" },
+          renterId: { type: "string" },
+          startDate: { type: "string", format: "date-time" },
+          endDate: { type: "string", format: "date-time" },
+          totalDays: { type: "integer" },
+          quotedAmount: { type: "number" },
+          currency: { type: "string", example: "PKR" },
+          status: {
+            type: "string",
+            enum: ["requested", "accepted", "rejected", "cancelled", "completed"],
+          },
+          cancellationReason: { type: "string" },
+          timeline: {
+            type: "array",
+            items: { type: "object" },
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
     },
   },
   paths: {
@@ -414,6 +460,135 @@ const openApiSpec = {
         },
         responses: {
           200: { description: "Expired upload cleanup completed" },
+        },
+      },
+    },
+    "/api/v1/bookings": {
+      post: {
+        tags: ["Bookings"],
+        summary: "Create booking (renter only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateBookingRequest" },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Booking created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    booking: { $ref: "#/components/schemas/Booking" },
+                  },
+                },
+              },
+            },
+          },
+          409: { description: "Car unavailable or overlapping booking" },
+        },
+      },
+    },
+    "/api/v1/bookings/mine": {
+      get: {
+        tags: ["Bookings"],
+        summary: "List my bookings",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Bookings fetched",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    bookings: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Booking" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/bookings/{id}": {
+      get: {
+        tags: ["Bookings"],
+        summary: "Get booking by ID",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Booking details",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    booking: { $ref: "#/components/schemas/Booking" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: ["Bookings"],
+        summary: "Update booking status by role",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateBookingRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Booking updated" },
+          403: { description: "Forbidden for requested status" },
+          409: { description: "Invalid status transition" },
+        },
+      },
+      delete: {
+        tags: ["Bookings"],
+        summary: "Delete booking (renter for limited statuses, or admin/staff)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking deleted" },
+          409: { description: "Booking cannot be deleted in current status" },
         },
       },
     },
