@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bcryptjs": "*",
+    "cloudinary": "*",
     "cors": "*",
     "dotenv": "*",
     "express": "*",

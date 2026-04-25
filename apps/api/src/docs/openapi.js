@@ -22,6 +22,7 @@ const openApiSpec = {
   tags: [
     { name: "Health", description: "Service health checks" },
     { name: "Auth", description: "Authentication endpoints" },
+    { name: "Uploads", description: "Two-phase upload session endpoints" },
     { name: "Cars", description: "Owner car management endpoints" },
     {
       name: "Car Moderation",
@@ -203,6 +204,26 @@ const openApiSpec = {
           notes: { type: "string", example: "Cross-checked with authority records." },
         },
       },
+      PresignUploadRequest: {
+        type: "object",
+        required: ["fileName", "contentType", "fileCategory"],
+        properties: {
+          fileName: { type: "string", example: "car-front.jpg" },
+          contentType: { type: "string", example: "image/jpeg" },
+          fileCategory: { type: "string", enum: ["image", "document"] },
+        },
+      },
+      MarkUploadedRequest: {
+        type: "object",
+        required: ["uploadSessionId", "fileKey", "publicId", "fileUrl"],
+        properties: {
+          uploadSessionId: { type: "string" },
+          fileKey: { type: "string" },
+          publicId: { type: "string" },
+          fileUrl: { type: "string", format: "uri" },
+          sizeBytes: { type: "integer", example: 243829 },
+        },
+      },
     },
   },
   paths: {
@@ -312,6 +333,87 @@ const openApiSpec = {
               },
             },
           },
+        },
+      },
+    },
+    "/api/v1/uploads/presign": {
+      post: {
+        tags: ["Uploads"],
+        summary: "Create Cloudinary signed upload session (owner only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/PresignUploadRequest" },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Signed upload session created" },
+        },
+      },
+    },
+    "/api/v1/uploads/mark-uploaded": {
+      post: {
+        tags: ["Uploads"],
+        summary: "Mark Cloudinary upload complete (owner only)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/MarkUploadedRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Upload status moved to uploaded" },
+          410: { description: "Upload session expired" },
+        },
+      },
+    },
+    "/api/v1/uploads/mine": {
+      get: {
+        tags: ["Uploads"],
+        summary: "List my upload sessions (owner only)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: "query",
+            name: "status",
+            required: false,
+            schema: {
+              type: "string",
+              enum: ["pending", "uploaded", "linked", "expired", "deleted"],
+            },
+          },
+        ],
+        responses: {
+          200: { description: "Upload sessions returned" },
+        },
+      },
+    },
+    "/api/v1/uploads/cleanup-expired": {
+      post: {
+        tags: ["Uploads"],
+        summary: "Expire orphan uploads past TTL (admin/govt staff)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  limit: { type: "integer", example: 500 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Expired upload cleanup completed" },
         },
       },
     },

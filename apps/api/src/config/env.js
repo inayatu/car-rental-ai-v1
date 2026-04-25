@@ -36,6 +36,12 @@ const envSchema = z
     JWT_REFRESH_SECRET: z.string().min(16),
     JWT_ACCESS_TTL: z.string().default("15m"),
     JWT_REFRESH_TTL: z.string().default("7d"),
+
+    CLOUDINARY_CLOUD_NAME: z.string().min(1),
+    CLOUDINARY_API_KEY: z.string().min(1),
+    CLOUDINARY_API_SECRET: z.string().min(1),
+    CLOUDINARY_FOLDER: z.string().default("car-rental-ai-v1"),
+    UPLOAD_URL_TTL_MINUTES: z.coerce.number().int().positive().default(15),
   });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -78,6 +84,13 @@ const env = {
     refreshSecret: rawEnv.JWT_REFRESH_SECRET,
     accessTtl: rawEnv.JWT_ACCESS_TTL,
     refreshTtl: rawEnv.JWT_REFRESH_TTL,
+  },
+  uploads: {
+    cloudName: rawEnv.CLOUDINARY_CLOUD_NAME,
+    apiKey: rawEnv.CLOUDINARY_API_KEY,
+    apiSecret: rawEnv.CLOUDINARY_API_SECRET,
+    folder: rawEnv.CLOUDINARY_FOLDER,
+    urlTtlMinutes: rawEnv.UPLOAD_URL_TTL_MINUTES,
   },
   db: {
     uri: buildMongoUri(),
