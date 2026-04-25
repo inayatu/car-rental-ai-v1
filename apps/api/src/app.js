@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const authRoutes = require("./modules/auth/auth.routes");
+const carRoutes = require("./modules/cars/car.routes");
 const requestLogger = require("./middlewares/request-logger.middleware");
 const logger = require("./utils/logger");
 const connectDB = require("./config/db");
@@ -19,6 +20,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/cars", carRoutes);
 
 app.use((error, _req, res, _next) => {
   logger.error("Unhandled API error", error);

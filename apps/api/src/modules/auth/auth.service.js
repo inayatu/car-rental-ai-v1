@@ -6,6 +6,8 @@ const {
   verifyRefreshToken,
 } = require("../../utils/jwt");
 
+const SELF_REGISTER_ALLOWED_ROLES = new Set(["renter", "owner"]);
+
 function buildAuthResponse(user) {
   const payload = {
     sub: user._id.toString(),
@@ -21,6 +23,13 @@ function buildAuthResponse(user) {
 
 async function register(input) {
   const { name, email, phone, password, role } = input;
+  const userRole = role || "renter";
+
+  if (!SELF_REGISTER_ALLOWED_ROLES.has(userRole)) {
+    const err = new Error("Invalid role for self registration");
+    err.status = 403;
+    throw err;
+  }
 
   const exists = await User.findOne({
     $or: [{ email: email.toLowerCase() }, { phone }],
@@ -38,7 +47,7 @@ async function register(input) {
     name,
     email: email.toLowerCase(),
     phone,
-    role: role || "renter",
+    role: userRole,
     passwordHash,
   });
 

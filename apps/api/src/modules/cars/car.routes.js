@@ -1,0 +1,22 @@
+const express = require("express");
+const { requireAuth } = require("../../middlewares/auth.middleware");
+const carController = require("./car.controller");
+
+const router = express.Router();
+
+router.post("/", requireAuth(["owner"]), carController.createCar);
+router.get("/mine", requireAuth(["owner"]), carController.listMyCars);
+router.get("/:id", requireAuth(["owner"]), carController.getMyCarById);
+router.patch("/:id", requireAuth(["owner"]), carController.updateMyCar);
+router.delete("/:id", requireAuth(["owner"]), carController.deleteMyCar);
+
+router.get(
+  "/moderation/pending",
+  requireAuth(["admin", "govt_staff"]),
+  carController.listPendingModeration
+);
+router.post("/:id/verify", requireAuth(["admin", "govt_staff"]), carController.verifyCar);
+router.post("/:id/unverify", requireAuth(["admin", "govt_staff"]), carController.unverifyCar);
+router.post("/:id/blacklist", requireAuth(["admin", "govt_staff"]), carController.blacklistCar);
+
+module.exports = router;
