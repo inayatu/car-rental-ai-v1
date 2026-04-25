@@ -1,10 +1,19 @@
 const express = require("express");
 const { requireAuth } = require("../../middlewares/auth.middleware");
 const carController = require("./car.controller");
+const { uploadSingle } = require("../../middlewares/upload.middleware");
 
 const router = express.Router();
 
-router.post("/", requireAuth(["owner"]), carController.createCar);
+router.post(
+  "/",
+  requireAuth(["owner"]),
+  uploadSingle.fields([
+    { name: "images", maxCount: 10 },
+    { name: "documents", maxCount: 10 },
+  ]),
+  carController.createCar
+);
 router.get("/mine", requireAuth(["owner"]), carController.listMyCars);
 
 router.get(
@@ -16,7 +25,15 @@ router.post("/:id/verify", requireAuth(["admin", "govt_staff"]), carController.v
 router.post("/:id/unverify", requireAuth(["admin", "govt_staff"]), carController.unverifyCar);
 router.post("/:id/blacklist", requireAuth(["admin", "govt_staff"]), carController.blacklistCar);
 router.get("/:id", requireAuth(["owner"]), carController.getMyCarById);
-router.patch("/:id", requireAuth(["owner"]), carController.updateMyCar);
+router.patch(
+  "/:id",
+  requireAuth(["owner"]),
+  uploadSingle.fields([
+    { name: "images", maxCount: 10 },
+    { name: "documents", maxCount: 10 },
+  ]),
+  carController.updateMyCar
+);
 router.delete("/:id", requireAuth(["owner"]), carController.deleteMyCar);
 
 module.exports = router;

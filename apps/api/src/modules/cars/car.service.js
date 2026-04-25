@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Car = require("./car.model");
-const uploadService = require("../uploads/upload.service");
 
 const MODERATION_ACTIONS = {
   VERIFY: "verify",
@@ -17,13 +16,6 @@ function ensureValidObjectId(id, fieldName = "id") {
 }
 
 async function createCar(ownerId, payload) {
-  const uploadUrls = [
-    ...(payload.images || []),
-    ...(payload.documents || []).map((document) => document.url),
-  ];
-
-  await uploadService.assertUploadUrlsReady(ownerId, uploadUrls);
-
   const now = new Date();
   const car = await Car.create({
     ...payload,
@@ -46,8 +38,6 @@ async function createCar(ownerId, payload) {
       },
     ],
   });
-
-  await uploadService.linkUploadUrlsToCar(ownerId, uploadUrls, car._id);
   return car;
 }
 
@@ -74,14 +64,6 @@ async function updateOwnerCar(ownerId, carId, updates) {
 
   if (payload.registrationNumber) {
     payload.registrationNumber = payload.registrationNumber.toUpperCase();
-  }
-
-  const uploadUrls = [
-    ...(payload.images || []),
-    ...(payload.documents || []).map((document) => document.url),
-  ];
-  if (uploadUrls.length > 0) {
-    await uploadService.assertUploadUrlsReady(ownerId, uploadUrls, { allowLinked: true });
   }
 
   const hasModerationRelevantChanges =
@@ -127,10 +109,6 @@ async function updateOwnerCar(ownerId, carId, updates) {
   }
 
   await car.save();
-
-  if (uploadUrls.length > 0) {
-    await uploadService.linkUploadUrlsToCar(ownerId, uploadUrls, car._id);
-  }
 
   return car;
 }

@@ -37,11 +37,11 @@ const envSchema = z
     JWT_ACCESS_TTL: z.string().default("15m"),
     JWT_REFRESH_TTL: z.string().default("7d"),
 
-    CLOUDINARY_CLOUD_NAME: z.string().min(1),
-    CLOUDINARY_API_KEY: z.string().min(1),
-    CLOUDINARY_API_SECRET: z.string().min(1),
-    CLOUDINARY_FOLDER: z.string().default("car-rental-ai-v1"),
-    UPLOAD_URL_TTL_MINUTES: z.coerce.number().int().positive().default(15),
+    UPLOADS_DIR: z.string().default("uploads"),
+    UPLOADS_PUBLIC_BASE_PATH: z.string().default("/uploads"),
+    IMAGE_MAX_WIDTH: z.coerce.number().int().positive().default(1920),
+    IMAGE_QUALITY: z.coerce.number().int().min(60).max(95).default(82),
+    UPLOAD_MAX_SIZE_MB: z.coerce.number().int().positive().default(10),
   });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -86,11 +86,11 @@ const env = {
     refreshTtl: rawEnv.JWT_REFRESH_TTL,
   },
   uploads: {
-    cloudName: rawEnv.CLOUDINARY_CLOUD_NAME,
-    apiKey: rawEnv.CLOUDINARY_API_KEY,
-    apiSecret: rawEnv.CLOUDINARY_API_SECRET,
-    folder: rawEnv.CLOUDINARY_FOLDER,
-    urlTtlMinutes: rawEnv.UPLOAD_URL_TTL_MINUTES,
+    dir: rawEnv.UPLOADS_DIR,
+    publicBasePath: rawEnv.UPLOADS_PUBLIC_BASE_PATH,
+    imageMaxWidth: rawEnv.IMAGE_MAX_WIDTH,
+    imageQuality: rawEnv.IMAGE_QUALITY,
+    maxSizeMb: rawEnv.UPLOAD_MAX_SIZE_MB,
   },
   db: {
     uri: buildMongoUri(),

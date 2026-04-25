@@ -9,13 +9,14 @@
   },
   "dependencies": {
     "bcryptjs": "*",
-    "cloudinary": "*",
     "cors": "*",
     "dotenv": "*",
     "express": "*",
     "helmet": "*",
     "jsonwebtoken": "*",
+    "multer": "*",
     "mongoose": "*",
+    "sharp": "*",
     "swagger-ui-express": "*",
     "winston": "*",
     "zod": "*"

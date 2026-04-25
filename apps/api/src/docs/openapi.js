@@ -22,7 +22,6 @@ const openApiSpec = {
   tags: [
     { name: "Health", description: "Service health checks" },
     { name: "Auth", description: "Authentication endpoints" },
-    { name: "Uploads", description: "Two-phase upload session endpoints" },
     { name: "Bookings", description: "Booking create/read/update/delete endpoints" },
     { name: "Cars", description: "Owner car management endpoints" },
     {
@@ -205,26 +204,6 @@ const openApiSpec = {
           notes: { type: "string", example: "Cross-checked with authority records." },
         },
       },
-      PresignUploadRequest: {
-        type: "object",
-        required: ["fileName", "contentType", "fileCategory"],
-        properties: {
-          fileName: { type: "string", example: "car-front.jpg" },
-          contentType: { type: "string", example: "image/jpeg" },
-          fileCategory: { type: "string", enum: ["image", "document"] },
-        },
-      },
-      MarkUploadedRequest: {
-        type: "object",
-        required: ["uploadSessionId", "fileKey", "publicId", "fileUrl"],
-        properties: {
-          uploadSessionId: { type: "string" },
-          fileKey: { type: "string" },
-          publicId: { type: "string" },
-          fileUrl: { type: "string", format: "uri" },
-          sizeBytes: { type: "integer", example: 243829 },
-        },
-      },
       CreateBookingRequest: {
         type: "object",
         required: ["carId", "startDate", "endDate"],
@@ -382,87 +361,6 @@ const openApiSpec = {
         },
       },
     },
-    "/api/v1/uploads/presign": {
-      post: {
-        tags: ["Uploads"],
-        summary: "Create Cloudinary signed upload session (owner only)",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/PresignUploadRequest" },
-            },
-          },
-        },
-        responses: {
-          201: { description: "Signed upload session created" },
-        },
-      },
-    },
-    "/api/v1/uploads/mark-uploaded": {
-      post: {
-        tags: ["Uploads"],
-        summary: "Mark Cloudinary upload complete (owner only)",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/MarkUploadedRequest" },
-            },
-          },
-        },
-        responses: {
-          200: { description: "Upload status moved to uploaded" },
-          410: { description: "Upload session expired" },
-        },
-      },
-    },
-    "/api/v1/uploads/mine": {
-      get: {
-        tags: ["Uploads"],
-        summary: "List my upload sessions (owner only)",
-        security: [{ bearerAuth: [] }],
-        parameters: [
-          {
-            in: "query",
-            name: "status",
-            required: false,
-            schema: {
-              type: "string",
-              enum: ["pending", "uploaded", "linked", "expired", "deleted"],
-            },
-          },
-        ],
-        responses: {
-          200: { description: "Upload sessions returned" },
-        },
-      },
-    },
-    "/api/v1/uploads/cleanup-expired": {
-      post: {
-        tags: ["Uploads"],
-        summary: "Expire orphan uploads past TTL (admin/govt staff)",
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: false,
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  limit: { type: "integer", example: 500 },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          200: { description: "Expired upload cleanup completed" },
-        },
-      },
-    },
     "/api/v1/bookings": {
       post: {
         tags: ["Bookings"],
@@ -600,7 +498,52 @@ const openApiSpec = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/CreateCarRequest" } },
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: [
+                  "title",
+                  "brand",
+                  "model",
+                  "year",
+                  "registrationNumber",
+                  "basePricePerDay",
+                  "district",
+                ],
+                properties: {
+                  title: { type: "string" },
+                  brand: { type: "string" },
+                  model: { type: "string" },
+                  year: { type: "integer" },
+                  registrationNumber: { type: "string" },
+                  color: { type: "string" },
+                  seats: { type: "integer" },
+                  transmission: { type: "string", enum: ["manual", "automatic"] },
+                  fuelType: {
+                    type: "string",
+                    enum: ["petrol", "diesel", "hybrid", "electric"],
+                  },
+                  basePricePerDay: { type: "number" },
+                  currency: { type: "string" },
+                  district: { type: "string" },
+                  city: { type: "string" },
+                  description: { type: "string" },
+                  status: { type: "string", enum: ["draft", "active", "paused"] },
+                  documentTypes: {
+                    type: "string",
+                    description: "Comma-separated or JSON array of document types matching documents[] order",
+                  },
+                  images: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
+                  documents: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
+                },
+              },
+            },
           },
         },
         responses: {
@@ -687,9 +630,38 @@ const openApiSpec = {
         requestBody: {
           required: true,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: {
-                allOf: [{ $ref: "#/components/schemas/CreateCarRequest" }],
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  brand: { type: "string" },
+                  model: { type: "string" },
+                  year: { type: "integer" },
+                  registrationNumber: { type: "string" },
+                  color: { type: "string" },
+                  seats: { type: "integer" },
+                  transmission: { type: "string", enum: ["manual", "automatic"] },
+                  fuelType: {
+                    type: "string",
+                    enum: ["petrol", "diesel", "hybrid", "electric"],
+                  },
+                  basePricePerDay: { type: "number" },
+                  currency: { type: "string" },
+                  district: { type: "string" },
+                  city: { type: "string" },
+                  description: { type: "string" },
+                  status: { type: "string", enum: ["draft", "active", "paused"] },
+                  documentTypes: { type: "string" },
+                  images: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
+                  documents: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
+                },
               },
             },
           },

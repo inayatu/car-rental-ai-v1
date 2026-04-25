@@ -1,8 +1,24 @@
 const { z } = require("zod");
 
+const fileUrlSchema = z.string().min(1).refine(
+  (value) => {
+    if (value.startsWith("/uploads/")) {
+      return true;
+    }
+
+    try {
+      const parsed = new URL(value);
+      return Boolean(parsed.protocol && parsed.host);
+    } catch (_error) {
+      return false;
+    }
+  },
+  { message: "Invalid file URL" }
+);
+
 const carDocumentSchema = z.object({
   docType: z.string().min(2),
-  url: z.string().url(),
+  url: fileUrlSchema,
   number: z.string().optional(),
   issuedBy: z.string().optional(),
   expiresAt: z.string().datetime().optional(),
@@ -26,7 +42,7 @@ const createCarSchema = z.object({
   }),
   status: z.enum(["draft", "active", "paused"]).optional(),
   description: z.string().optional(),
-  images: z.array(z.string().url()).optional(),
+  images: z.array(fileUrlSchema).optional(),
   documents: z.array(carDocumentSchema).min(1),
 });
 
