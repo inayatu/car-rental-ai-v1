@@ -69,6 +69,11 @@
     return sp.toString();
   }
 
+  function eventTargetElement(target) {
+    if (!target) return null;
+    return target.nodeType === Node.ELEMENT_NODE ? target : target.parentElement;
+  }
+
   function fuelLabel(f) {
     if (!f) return "";
     return f.charAt(0).toUpperCase() + f.slice(1);
@@ -81,12 +86,13 @@
     const owner = c.ownerName || "Owner";
     const title = c.title || `${c.brand || ""} ${c.model || ""}`.trim() || "Vehicle";
     const img = Array.isArray(c.images) && c.images[0] ? c.images[0] : null;
-    const id = c.id || c._id;
+    const rawId = c.id != null ? c.id : c._id;
+    const id = rawId != null ? String(rawId) : "";
     const bg = img
       ? ` style="background-image:url('${String(img).replace(/'/g, "%27")}');background-size:cover;background-position:center;"`
       : "";
     return `
-      <div class="car-card" data-car-id="${id}" role="button" tabindex="0" onclick="if(window.showPage)window.showPage('detail')">
+      <div class="car-card" data-car-id="${id}" role="button" tabindex="0">
         <div class="car-img"${bg}>${img ? "" : "🚙"}
           <div class="car-img-overlay">
             <span class="car-price-badge">${cur} ${price}/day</span>
@@ -104,7 +110,7 @@
         </div>
         <div class="car-footer">
           <div class="car-rate">${cur} ${price} <span>/day</span></div>
-          <button type="button" class="btn btn-amber btn-sm" onclick="event.stopPropagation();if(window.showPage)window.showPage('detail')">View & Book</button>
+          <button type="button" class="btn btn-amber btn-sm" data-gb-listing-cta>View & Book</button>
         </div>
       </div>
     `;
@@ -289,11 +295,49 @@
     }
   }
 
+  function openDetailForCard(card) {
+    const id = card && card.getAttribute("data-car-id");
+    if (!id || id === "undefined" || id === "null") {
+      return;
+    }
+    if (window.GBDetail && typeof window.GBDetail.setSelectedId === "function") {
+      window.GBDetail.setSelectedId(id);
+    }
+    if (window.showPage) {
+      void window.showPage("detail");
+    }
+  }
+
+  function bindGridOpenDetail() {
+    const grid = document.getElementById("listingsGrid");
+    if (!grid || grid._gbOpenDetail) return;
+    grid._gbOpenDetail = true;
+    grid.addEventListener("click", (e) => {
+      const from = eventTargetElement(e.target);
+      if (!from || !from.closest) return;
+      if (from.closest("a[href]")) return;
+      const card = from.closest(".car-card[data-car-id]");
+      if (!card) return;
+      e.preventDefault();
+      openDetailForCard(card);
+    });
+    grid.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const from = eventTargetElement(e.target);
+      if (!from || !from.closest) return;
+      const card = from.closest(".car-card[data-car-id]");
+      if (!card || from !== card) return;
+      e.preventDefault();
+      openDetailForCard(card);
+    });
+  }
+
   let didBind = false;
   function bindOnce() {
     if (didBind) return;
     didBind = true;
     bind();
+    bindGridOpenDetail();
   }
 
   window.GBListings = {

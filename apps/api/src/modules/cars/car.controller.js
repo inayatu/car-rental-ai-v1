@@ -198,6 +198,16 @@ async function listPublicCars(req, res, next) {
   }
 }
 
+async function getPublicCarById(req, res, next) {
+  try {
+    const { id } = carIdParamsSchema.parse(req.params);
+    const car = await carService.getPublicCarById(id);
+    return res.status(200).json({ car: sanitizePublicCar(car) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function createCar(req, res, next) {
   try {
     const uploadData = await processCarUploads(req.files, req.body.documentTypes);
@@ -312,6 +322,7 @@ async function blacklistCar(req, res, next) {
 
 module.exports = {
   listPublicCars,
+  getPublicCarById,
   createCar,
   listMyCars,
   getMyCarById,

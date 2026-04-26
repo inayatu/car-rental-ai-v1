@@ -4,6 +4,7 @@ const Car = require("../cars/car.model");
 
 const BLOCKING_BOOKING_STATUSES = new Set(["requested", "accepted"]);
 const ACTIVE_BOOKING_STATUSES = new Set(["requested", "accepted"]);
+const BOOKING_CAR_POPULATE_SELECT = "title brand model year images basePricePerDay location currency";
 
 function ensureValidObjectId(id, fieldName = "id") {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -126,6 +127,7 @@ async function createBooking(renterId, renterRole, payload) {
     ],
   });
 
+  await booking.populate("carId", BOOKING_CAR_POPULATE_SELECT);
   return booking;
 }
 
@@ -140,12 +142,14 @@ async function listMyBookings(actorId, actorRole) {
     query.$or = [{ renterId: actorId }, { ownerId: actorId }];
   }
 
-  return Booking.find(query).sort({ createdAt: -1 });
+  return Booking.find(query)
+    .sort({ createdAt: -1 })
+    .populate("carId", BOOKING_CAR_POPULATE_SELECT);
 }
 
 async function getBookingByIdForActor(actorId, actorRole, bookingId) {
   ensureValidObjectId(bookingId, "booking id");
-  const booking = await Booking.findById(bookingId);
+  const booking = await Booking.findById(bookingId).populate("carId", BOOKING_CAR_POPULATE_SELECT);
   if (!booking) {
     const err = new Error("Booking not found");
     err.status = 404;
@@ -262,6 +266,7 @@ async function updateBookingStatus(actorId, actorRole, bookingId, updates) {
   );
 
   await booking.save();
+  await booking.populate("carId", BOOKING_CAR_POPULATE_SELECT);
   return booking;
 }
 

@@ -477,41 +477,43 @@
 ══════════════════════════ -->
 <div class="page" id="page-detail">
   <div style="background:var(--forest);padding:80px 0 0"></div>
+  <p id="detailError" class="text-sm" style="display:none;color:#c43c3c;max-width:var(--wrap);margin:0 auto;padding:0.5rem 1.5rem" role="alert"></p>
+  <p id="detailLoading" class="text-sm text-muted" style="max-width:var(--wrap);margin:0 auto;padding:0.5rem 1.5rem">Loading vehicle…</p>
   <div class="wrap" style="padding-top:2rem">
     <button class="btn btn-outline btn-sm mb-2" onclick="showPage('listings')">← Back to Listings</button>
-    <div class="detail-layout">
+    <div class="detail-layout" id="detailContent">
       <div>
         <!-- Gallery -->
-        <div class="detail-gallery">🚙
+        <div class="detail-gallery" id="detailGallery">🚙
           <div class="detail-gallery-badge"><span class="badge badge-green">✓ Verified Vehicle</span></div>
         </div>
 
         <div class="mt-3">
           <div class="flex-between">
             <div>
-              <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:700;letter-spacing:-0.5px">Toyota Prado 2020</h1>
-              <div class="car-loc mt-1">📍 Hunza Valley, Gilgit Baltistan</div>
+              <h1 id="detailTitle" style="font-family:var(--font-display);font-size:2rem;font-weight:700;letter-spacing:-0.5px">Loading…</h1>
+              <div class="car-loc mt-1" id="detailLoc">—</div>
             </div>
             <div style="text-align:right">
               <div class="stars" style="font-size:16px">★★★★★</div>
-              <div class="text-sm text-muted mt-1">4.9 · 32 trips</div>
+              <div class="text-sm text-muted mt-1">Verified listing</div>
             </div>
           </div>
         </div>
 
         <!-- Specs -->
         <div class="detail-specs-grid">
-          <div class="detail-spec"><div class="detail-spec-icon">⛽</div><div class="detail-spec-val">Diesel</div><div class="detail-spec-lbl">Fuel Type</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">👥</div><div class="detail-spec-val">7 Seats</div><div class="detail-spec-lbl">Capacity</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">🔧</div><div class="detail-spec-val">4WD</div><div class="detail-spec-lbl">Drive Type</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">📅</div><div class="detail-spec-val">2020</div><div class="detail-spec-lbl">Year</div></div>
+          <div class="detail-spec"><div class="detail-spec-icon">⛽</div><div class="detail-spec-val" id="detailSpecFuel">—</div><div class="detail-spec-lbl">Fuel Type</div></div>
+          <div class="detail-spec"><div class="detail-spec-icon">👥</div><div class="detail-spec-val" id="detailSpecSeats">—</div><div class="detail-spec-lbl">Capacity</div></div>
+          <div class="detail-spec"><div class="detail-spec-icon">🔧</div><div class="detail-spec-val" id="detailSpecTrans">—</div><div class="detail-spec-lbl">Transmission</div></div>
+          <div class="detail-spec"><div class="detail-spec-icon">📅</div><div class="detail-spec-val" id="detailSpecYear">—</div><div class="detail-spec-lbl">Year</div></div>
         </div>
 
         <hr class="divider">
 
         <!-- Description -->
         <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:0.8rem">About This Vehicle</h3>
-        <p style="font-size:14px;color:var(--ink2);line-height:1.8">This well-maintained Toyota Prado is ideal for exploring Hunza Valley, Khunjerab Pass, and the surrounding mountain terrain. It features a powerful 4WD system, full air conditioning, a roof rack, and comfortable seating for 7 passengers. The vehicle comes with a first aid kit and basic recovery equipment for mountain trips. Available with or without an experienced local driver.</p>
+        <p id="detailDescription" style="font-size:14px;color:var(--ink2);line-height:1.8">—</p>
 
         <div class="flex gap-1 mt-3" style="flex-wrap:wrap">
           <span class="badge badge-green">✓ 4WD</span>
@@ -527,15 +529,15 @@
         <!-- Owner -->
         <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:1rem">Vehicle Owner</h3>
         <div class="detail-owner">
-          <div class="owner-avatar">IA</div>
+          <div class="owner-avatar" id="detailOwnerAvatar">—</div>
           <div style="flex:1">
-            <div class="owner-name">Imran Ali</div>
-            <div class="owner-since">Member since 2023 · Hunza Valley</div>
+            <div class="owner-name" id="detailOwnerName">—</div>
+            <div class="owner-since" id="detailOwnerMeta">Verified on GB Trails</div>
             <div class="owner-badge mt-1"><span class="badge badge-green">✓ ID Verified</span> <span class="badge badge-green">✓ Govt. Verified</span></div>
           </div>
           <div style="text-align:right">
             <div class="stars">★★★★★</div>
-            <div class="text-xs text-muted">32 trips completed</div>
+            <div class="text-xs text-muted">Local owner</div>
           </div>
         </div>
 
@@ -551,45 +553,30 @@
 
       <!-- BOOKING SIDEBAR -->
       <div class="booking-sidebar">
-        <div class="booking-card">
-          <div class="booking-price">PKR 8,000 <span>/ day</span></div>
-          <div class="stars mt-1">★★★★★ <span style="font-size:12px;color:var(--ink4);font-family:var(--font-body)">4.9 · 32 reviews</span></div>
+        <form class="booking-card" id="detailBookForm" novalidate>
+          <div class="booking-price" id="detailPrice">— <span>/ day</span></div>
+          <div class="stars mt-1">★★★★★ <span style="font-size:12px;color:var(--ink4);font-family:var(--font-body)">Verified listing</span></div>
 
           <hr class="divider">
+          <p id="detailBookMsg" class="text-sm" style="display:none;margin-bottom:0.75rem" role="status"></p>
 
           <div class="form-group">
-            <label class="form-label">Pick-up Date</label>
-            <input type="date" class="form-input" onchange="calcPrice()">
+            <label class="form-label" for="detailBookStart">Pick-up Date</label>
+            <input type="date" class="form-input" id="detailBookStart" name="start" />
           </div>
           <div class="form-group">
-            <label class="form-label">Return Date</label>
-            <input type="date" class="form-input" onchange="calcPrice()">
+            <label class="form-label" for="detailBookEnd">Return Date</label>
+            <input type="date" class="form-input" id="detailBookEnd" name="end" />
           </div>
-          <div class="form-group">
-            <label class="form-label">Number of Passengers</label>
-            <select class="form-select">
-              <option>1–2 passengers</option>
-              <option>3–4 passengers</option>
-              <option selected>5–7 passengers</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Require Driver?</label>
-            <select class="form-select">
-              <option>Yes — include driver</option>
-              <option>No — self-drive</option>
-            </select>
+          <p class="text-xs text-muted" style="margin:0 0 0.5rem">Return date is the day you bring the vehicle back. Estimates use daily rate × days.</p>
+
+          <div class="booking-breakdown" id="detailBookBreakdown">
+            <div class="booking-row total"><span>Estimated total</span><span>—</span></div>
           </div>
 
-          <div class="booking-breakdown">
-            <div class="booking-row"><span>PKR 8,000 × 3 days</span><span>PKR 24,000</span></div>
-            <div class="booking-row"><span>Driver fee (3 days)</span><span>PKR 3,000</span></div>
-            <div class="booking-row total"><span>Total Estimate</span><span>PKR 27,000</span></div>
-          </div>
-
-          <button class="btn btn-amber btn-block btn-lg" onclick="showPage('auth')">Request to Book</button>
-          <div class="booking-note">Payment is settled directly with the owner. No online payment required. You will receive a confirmation SMS and email once the owner accepts.</div>
-        </div>
+          <button type="submit" class="btn btn-amber btn-block btn-lg" id="detailBookBtn">Request to Book</button>
+          <div class="booking-note">Payment is settled directly with the owner. No online payment required. You will receive a confirmation when the owner accepts.</div>
+        </form>
 
         <div class="alert alert-success mt-2">✓ Owner typically responds within <strong>2–4 hours</strong></div>
         <div class="alert alert-warn mt-1">⚡ High demand this week — only 3 slots left in July</div>
@@ -703,8 +690,8 @@
     <aside class="sidebar" id="renterSidebar">
       <div class="sidebar-header">
         <div class="sidebar-user">
-          <div class="sidebar-avatar">AK</div>
-          <div><div class="sidebar-name">Ali Khan</div><div class="sidebar-role">Renter Account</div></div>
+          <div class="sidebar-avatar" id="renterSidebarAvatar">—</div>
+          <div><div class="sidebar-name" id="renterSidebarName">Renter</div><div class="sidebar-role">Renter Account</div></div>
         </div>
       </div>
       <nav class="sidebar-nav">
@@ -726,65 +713,24 @@
     <!-- MAIN -->
     <main class="dashboard-main">
       <div class="dashboard-header">
-        <div class="dashboard-welcome">Good morning, Ali 👋</div>
-        <div class="dashboard-date">Saturday, 25 April 2026</div>
+        <div class="dashboard-welcome" id="renterWelcome">My bookings</div>
+        <div class="dashboard-date" id="renterDate"></div>
       </div>
 
       <div class="stats-row">
-        <div class="stat-box"><div class="stat-val">8</div><div class="stat-lbl">Total Bookings</div></div>
-        <div class="stat-box"><div class="stat-val amber">3</div><div class="stat-lbl">Active / Upcoming</div></div>
-        <div class="stat-box"><div class="stat-val moss">5</div><div class="stat-lbl">Completed Trips</div></div>
-        <div class="stat-box"><div class="stat-val">PKR<br><span style="font-size:1.4rem">87K</span></div><div class="stat-lbl">Total Spent</div></div>
+        <div class="stat-box"><div class="stat-val" id="renterStatTotal">0</div><div class="stat-lbl">Total Bookings</div></div>
+        <div class="stat-box"><div class="stat-val amber" id="renterStatActive">0</div><div class="stat-lbl">Active / Upcoming</div></div>
+        <div class="stat-box"><div class="stat-val moss" id="renterStatDone">0</div><div class="stat-lbl">Completed Trips</div></div>
+        <div class="stat-box"><div class="stat-val" id="renterStatSpent">PKR<br><span style="font-size:1.4rem">0</span></div><div class="stat-lbl">Total Spent (est.)</div></div>
       </div>
-
-      <!-- UPCOMING BOOKING ALERT -->
-      <div class="alert alert-warn mb-3">🚀 Your upcoming trip to <strong>Hunza Valley</strong> starts in <strong>3 days</strong>. Vehicle: Toyota Prado · Owner: Imran Ali · PKR 27,000.</div>
 
       <div class="flex-between mb-2">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700">My Bookings</h2>
         <button class="btn btn-amber btn-sm" onclick="showPage('listings')">+ New Booking</button>
       </div>
 
-      <div class="bookings-list">
-        <div class="booking-item">
-          <div class="booking-car-icon">🚙</div>
-          <div class="booking-info">
-            <div class="booking-car-name">Toyota Prado 2020 — Hunza Valley</div>
-            <div class="booking-dates">28 Apr – 2 May 2026 · 4 days · With Driver</div>
-            <div class="mt-1"><span class="badge badge-amber">⏳ Confirmed — Upcoming</span></div>
-          </div>
-          <div>
-            <div class="booking-amount">PKR 27,000</div>
-            <div class="booking-amount-lbl">Cash on pickup</div>
-            <button class="btn btn-outline btn-sm mt-1">View Details</button>
-          </div>
-        </div>
-        <div class="booking-item">
-          <div class="booking-car-icon">🚐</div>
-          <div class="booking-info">
-            <div class="booking-car-name">Suzuki Jimny — Fairy Meadows</div>
-            <div class="booking-dates">10 – 13 Mar 2026 · 3 days · Self-Drive</div>
-            <div class="mt-1"><span class="badge badge-green">✓ Completed</span></div>
-          </div>
-          <div>
-            <div class="booking-amount">PKR 16,500</div>
-            <div class="booking-amount-lbl">Paid</div>
-            <button class="btn btn-outline btn-sm mt-1">Leave Review</button>
-          </div>
-        </div>
-        <div class="booking-item">
-          <div class="booking-car-icon">🚌</div>
-          <div class="booking-info">
-            <div class="booking-car-name">Toyota Coaster — Skardu Group Tour</div>
-            <div class="booking-dates">5 – 9 Jan 2026 · 4 days · 18 passengers</div>
-            <div class="mt-1"><span class="badge badge-green">✓ Completed</span></div>
-          </div>
-          <div>
-            <div class="booking-amount">PKR 48,000</div>
-            <div class="booking-amount-lbl">Paid</div>
-            <button class="btn btn-outline btn-sm mt-1">Receipt</button>
-          </div>
-        </div>
+      <div class="bookings-list" id="renterBookingsList">
+        <p class="text-sm text-muted">Open this page to load your bookings from the server.</p>
       </div>
     </main>
   </div>
@@ -827,49 +773,21 @@
         <div class="dashboard-date">Imran Ali · Hunza Valley</div>
       </div>
 
-      <!-- ALERT: New Booking Request -->
-      <div class="alert alert-warn mb-3">📬 <strong>New booking request</strong> — Ali Khan wants to rent your Prado (28 Apr – 2 May). <a style="color:var(--amber);font-weight:700;cursor:pointer">Review Request →</a></div>
-
       <div class="stats-row">
-        <div class="stat-box"><div class="stat-val moss">2</div><div class="stat-lbl">Vehicles Listed</div></div>
-        <div class="stat-box"><div class="stat-val amber">2</div><div class="stat-lbl">Pending Requests</div></div>
-        <div class="stat-box"><div class="stat-val">32</div><div class="stat-lbl">Trips Completed</div></div>
-        <div class="stat-box"><div class="stat-val">PKR<br><span style="font-size:1.4rem">312K</span></div><div class="stat-lbl">Total Earnings</div></div>
+        <div class="stat-box"><div class="stat-val moss" id="ownerStatVehicles">—</div><div class="stat-lbl">Vehicles Listed</div></div>
+        <div class="stat-box"><div class="stat-val amber" id="ownerStatPending">0</div><div class="stat-lbl">Pending Requests</div></div>
+        <div class="stat-box"><div class="stat-val" id="ownerStatTrips">—</div><div class="stat-lbl">Trips Completed</div></div>
+        <div class="stat-box"><div class="stat-val" id="ownerStatEarnings">—</div><div class="stat-lbl">Total Earnings</div></div>
       </div>
 
       <!-- BOOKING REQUESTS -->
       <div class="flex-between mb-2 mt-2">
         <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700">Pending Requests</h2>
-        <span class="badge badge-amber">2 awaiting response</span>
+        <span class="badge badge-amber" id="ownerPendingBadge">—</span>
       </div>
 
-      <div class="bookings-list mb-3">
-        <div class="booking-item" style="border-left:3px solid var(--amber)">
-          <div class="booking-car-icon">🚙</div>
-          <div class="booking-info">
-            <div class="booking-car-name">Toyota Prado — Requested by Ali Khan</div>
-            <div class="booking-dates">28 Apr – 2 May 2026 · 4 days · 5 passengers · With Driver</div>
-            <div class="mt-1 text-sm text-muted">Received 2 hours ago · Renter has 8 completed trips · Verified ID</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;text-align:right">
-            <div class="booking-amount">PKR 27,000</div>
-            <button class="btn btn-forest btn-sm">✓ Accept</button>
-            <button class="btn btn-outline btn-sm" style="color:#c43c3c;border-color:#c43c3c">✗ Decline</button>
-          </div>
-        </div>
-        <div class="booking-item" style="border-left:3px solid var(--amber)">
-          <div class="booking-car-icon">🚌</div>
-          <div class="booking-info">
-            <div class="booking-car-name">Toyota Hilux Surf — Requested by Group Tour Co.</div>
-            <div class="booking-dates">5 – 10 May 2026 · 5 days · Deosai Plains</div>
-            <div class="mt-1 text-sm text-muted">Received 5 hours ago · New renter · Verified ID</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;text-align:right">
-            <div class="booking-amount">PKR 47,500</div>
-            <button class="btn btn-forest btn-sm">✓ Accept</button>
-            <button class="btn btn-outline btn-sm" style="color:#c43c3c;border-color:#c43c3c">✗ Decline</button>
-          </div>
-        </div>
+      <div class="bookings-list mb-3" id="ownerBookingsPending">
+        <p class="text-sm text-muted">Loading…</p>
       </div>
 
       <!-- MY VEHICLES -->
@@ -915,17 +833,14 @@
       </div>
 
       <!-- RECENT BOOKINGS TABLE -->
-      <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin:2rem 0 1rem">Recent Bookings</h2>
+      <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin:2rem 0 1rem">All Bookings</h2>
       <div class="card table-wrap">
-        <table>
+        <table id="ownerBookingsTable">
           <thead>
             <tr><th>Renter</th><th>Vehicle</th><th>Dates</th><th>Days</th><th>Amount</th><th>Status</th></tr>
           </thead>
           <tbody>
-            <tr><td><strong>Ali Khan</strong></td><td>Prado 2020</td><td>28 Apr – 2 May</td><td>4</td><td>PKR 27,000</td><td><span class="badge badge-amber">Confirmed</span></td></tr>
-            <tr><td><strong>Sara Baig</strong></td><td>Prado 2020</td><td>10–14 Mar</td><td>4</td><td>PKR 32,000</td><td><span class="badge badge-green">Completed</span></td></tr>
-            <tr><td><strong>M. Raza</strong></td><td>Hilux Surf</td><td>2–5 Feb</td><td>3</td><td>PKR 28,500</td><td><span class="badge badge-green">Completed</span></td></tr>
-            <tr><td><strong>Asad Mir</strong></td><td>Prado 2020</td><td>15–19 Jan</td><td>4</td><td>PKR 27,000</td><td><span class="badge badge-green">Completed</span></td></tr>
+            <tr><td colspan="6" class="text-sm text-muted">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -945,86 +860,147 @@
 
     <div class="add-listing-layout">
       <div>
+        <p id="addListingError" class="form-group text-sm" style="display:none;color:#c43c3c;font-weight:600" role="alert"></p>
+        <p id="addListingSuccess" class="form-group text-sm" style="display:none;color:var(--moss);font-weight:600" role="status"></p>
+
+        <form id="form-add-listing" novalidate>
         <!-- Basic Info -->
         <div class="form-section">
           <div class="form-section-title"><span class="form-section-icon">🚙</span> Vehicle Information</div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Vehicle Make</label><select class="form-select"><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Mitsubishi</option><option>Other</option></select></div>
-            <div class="form-group"><label class="form-label">Model</label><input class="form-input" placeholder="e.g. Prado, Hilux, Jimny"></div>
+          <div class="form-group">
+            <label class="form-label" for="addListingTitle">Listing title</label>
+            <input class="form-input" id="addListingTitle" name="title" required minlength="2" placeholder="e.g. Toyota Prado 2020 — Hunza" autocomplete="off" />
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Year</label><input class="form-input" type="number" placeholder="2020"></div>
-            <div class="form-group"><label class="form-label">Vehicle Type</label><select class="form-select"><option>SUV / 4WD</option><option>Jeep</option><option>Sedan</option><option>Van / Coaster</option><option>Pickup / Hilux</option></select></div>
+            <div class="form-group"><label class="form-label" for="addListingBrand">Make (brand)</label>
+              <select class="form-select" id="addListingBrand" name="brand" required>
+                <option value="">Select…</option>
+                <option>Toyota</option>
+                <option>Suzuki</option>
+                <option>Honda</option>
+                <option>Mitsubishi</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingModel">Model</label>
+              <input class="form-input" id="addListingModel" name="model" required placeholder="e.g. Prado, Hilux, Jimny" />
+            </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Fuel Type</label><select class="form-select"><option>Diesel</option><option>Petrol</option><option>CNG</option></select></div>
-            <div class="form-group"><label class="form-label">Seating Capacity</label><input class="form-input" type="number" placeholder="7"></div>
+            <div class="form-group"><label class="form-label" for="addListingYear">Year</label>
+              <input class="form-input" id="addListingYear" name="year" type="number" required min="1980" placeholder="2020" />
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingVehicleType">Vehicle type (for description)</label>
+              <select class="form-select" id="addListingVehicleType">
+                <option>SUV / 4WD</option>
+                <option>Jeep</option>
+                <option>Sedan</option>
+                <option>Van / Coaster</option>
+                <option>Pickup / Hilux</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Drive Type</label><select class="form-select"><option>4WD</option><option>2WD</option><option>AWD</option></select></div>
-            <div class="form-group"><label class="form-label">Registration Number</label><input class="form-input" placeholder="e.g. GB-1234"></div>
+            <div class="form-group"><label class="form-label" for="addListingFuel">Fuel</label>
+              <select class="form-select" id="addListingFuel" name="fuelType" required>
+                <option value="diesel">Diesel</option>
+                <option value="petrol">Petrol</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="electric">Electric</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingSeats">Seats</label>
+              <input class="form-input" id="addListingSeats" name="seats" type="number" min="1" max="12" placeholder="7" />
+            </div>
           </div>
-          <div class="form-group"><label class="form-label">Vehicle Description</label><textarea class="form-textarea" placeholder="Describe your vehicle — condition, features, what makes it suitable for GB terrain..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="addListingTransmission">Transmission</label>
+              <select class="form-select" id="addListingTransmission" name="transmission" required>
+                <option value="manual">Manual</option>
+                <option value="automatic">Automatic</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingColor">Color (optional)</label>
+              <input class="form-input" id="addListingColor" name="color" placeholder="White" />
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label" for="addListingReg">Registration number</label>
+            <input class="form-input" id="addListingReg" name="registrationNumber" required minlength="3" placeholder="e.g. GB-1234" autocomplete="off" />
+          </div>
+          <div class="form-group"><label class="form-label" for="addListingDescription">Description</label>
+            <textarea class="form-textarea" id="addListingDescription" name="description" rows="5" placeholder="Condition, features, terrain suitability, driver option…"></textarea>
+          </div>
         </div>
 
         <!-- Location & Pricing -->
         <div class="form-section">
           <div class="form-section-title"><span class="form-section-icon">📍</span> Location & Pricing</div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Base Location</label><select class="form-select"><option>Hunza Valley</option><option>Gilgit City</option><option>Skardu</option><option>Fairy Meadows</option><option>Naran</option><option>Other</option></select></div>
-            <div class="form-group"><label class="form-label">Price Per Day (PKR)</label><input class="form-input" type="number" placeholder="8000"></div>
+            <div class="form-group"><label class="form-label" for="addListingDistrict">District / area</label>
+              <input class="form-input" id="addListingDistrict" name="district" required minlength="2" placeholder="e.g. Hunza, Skardu" list="addListingDistrictList" />
+              <datalist id="addListingDistrictList">
+                <option value="Hunza"></option>
+                <option value="Skardu"></option>
+                <option value="Gilgit"></option>
+                <option value="Naran"></option>
+                <option value="Fairy Meadows"></option>
+              </datalist>
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingCity">City (optional)</label>
+              <input class="form-input" id="addListingCity" name="city" placeholder="Town or village" />
+            </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Driver Available?</label><select class="form-select"><option>Yes — included in price</option><option>Yes — extra charge</option><option>No — self-drive only</option></select></div>
-            <div class="form-group"><label class="form-label">Minimum Rental Days</label><input class="form-input" type="number" placeholder="1"></div>
-          </div>
-          <div class="form-group"><label class="form-label">Special Notes for Renters</label><textarea class="form-textarea" style="min-height:70px" placeholder="e.g. Valid driving licence required, advance booking of 2 days preferred..."></textarea></div>
-        </div>
-
-        <!-- Features -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="form-section-icon">✅</span> Features & Amenities</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.7rem">
-            <label class="filter-option"><input type="checkbox" checked><label>Air Conditioning</label></label>
-            <label class="filter-option"><input type="checkbox" checked><label>4WD / Off-road</label></label>
-            <label class="filter-option"><input type="checkbox"><label>Roof Rack</label></label>
-            <label class="filter-option"><input type="checkbox"><label>USB Charging</label></label>
-            <label class="filter-option"><input type="checkbox"><label>First Aid Kit</label></label>
-            <label class="filter-option"><input type="checkbox"><label>Recovery Gear</label></label>
-            <label class="filter-option"><input type="checkbox"><label>GPS Navigation</label></label>
-            <label class="filter-option"><input type="checkbox"><label>Spare Tyre</label></label>
-            <label class="filter-option"><input type="checkbox"><label>Camping Gear</label></label>
+            <div class="form-group"><label class="form-label" for="addListingPrice">Price per day (PKR)</label>
+              <input class="form-input" id="addListingPrice" name="basePricePerDay" type="number" required min="0" step="100" placeholder="8000" />
+            </div>
+            <div class="form-group"><label class="form-label" for="addListingCurrency">Currency</label>
+              <input class="form-input" id="addListingCurrency" name="currency" value="PKR" maxlength="3" />
+            </div>
           </div>
         </div>
 
         <!-- Photos -->
         <div class="form-section">
           <div class="form-section-title"><span class="form-section-icon">📸</span> Vehicle Photos</div>
-          <div class="upload-zone">
-            <div class="upload-icon">📷</div>
-            <div class="upload-text">Drag & drop photos or click to upload</div>
-            <div class="upload-sub">Upload at least 4 clear photos · Front, rear, interior, and side views</div>
+          <p class="text-xs text-muted mb-2">At least one photo (JPEG, PNG, or WebP). Up to 10 images.</p>
+          <div class="form-group">
+            <label class="form-label" for="addListingImages">Photos</label>
+            <input type="file" id="addListingImages" accept="image/jpeg,image/png,image/webp" multiple />
           </div>
         </div>
 
         <!-- Documents -->
         <div class="form-section">
           <div class="form-section-title"><span class="form-section-icon">📄</span> Documents for Verification</div>
-          <div class="alert alert-warn">All documents are verified by the GB Trails team before your listing goes live. This process takes 24–72 hours.</div>
+          <div class="alert alert-warn">Registration (RC) PDF is required. Other PDFs improve verification speed. Only PDF files for documents.</div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Vehicle Registration (RC Book)</label><div class="upload-zone" style="padding:1.5rem"><div class="upload-icon" style="font-size:24px">📄</div><div class="upload-text" style="font-size:13px">Upload RC Book</div></div></div>
-            <div class="form-group"><label class="form-label">Owner CNIC</label><div class="upload-zone" style="padding:1.5rem"><div class="upload-icon" style="font-size:24px">🪪</div><div class="upload-text" style="font-size:13px">Upload CNIC (front & back)</div></div></div>
+            <div class="form-group">
+              <label class="form-label" for="addListingDocRc">Vehicle registration (RC) — required (PDF)</label>
+              <input type="file" id="addListingDocRc" accept="application/pdf" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addListingDocCnic">Owner CNIC (PDF, optional)</label>
+              <input type="file" id="addListingDocCnic" accept="application/pdf" />
+            </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Fitness Certificate</label><div class="upload-zone" style="padding:1.5rem"><div class="upload-icon" style="font-size:24px">✅</div><div class="upload-text" style="font-size:13px">Upload Fitness Certificate</div></div></div>
-            <div class="form-group"><label class="form-label">Insurance Document</label><div class="upload-zone" style="padding:1.5rem"><div class="upload-icon" style="font-size:24px">🛡</div><div class="upload-text" style="font-size:13px">Upload Insurance (optional)</div></div></div>
+            <div class="form-group">
+              <label class="form-label" for="addListingDocFitness">Fitness certificate (PDF, optional)</label>
+              <input type="file" id="addListingDocFitness" accept="application/pdf" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addListingDocInsurance">Insurance (PDF, optional)</label>
+              <input type="file" id="addListingDocInsurance" accept="application/pdf" />
+            </div>
           </div>
         </div>
 
-        <div style="display:flex;gap:1rem">
-          <button class="btn btn-amber btn-lg">Submit for Verification →</button>
-          <button class="btn btn-outline btn-lg">Save as Draft</button>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <button type="button" class="btn btn-amber btn-lg" id="addListingSubmitActive" data-add-status="active">Submit for verification →</button>
+          <button type="button" class="btn btn-outline btn-lg" id="addListingSubmitDraft" data-add-status="draft">Save as draft</button>
         </div>
+        </form>
       </div>
 
       <!-- TIPS SIDEBAR -->
@@ -1063,8 +1039,12 @@
   </div>
 </div>
 
+<script src="/js/api.js" defer></script>
 <script src="/js/auth.js" defer></script>
 <script src="/js/listings.js" defer></script>
+<script src="/js/detail.js" defer></script>
+<script src="/js/bookings.js" defer></script>
+<script src="/js/addListing.js" defer></script>
 <script src="/js/app.js" defer></script>
 </body>
 </html>

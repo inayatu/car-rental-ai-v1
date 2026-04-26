@@ -42,6 +42,23 @@ async function showPage(name) {
   if (name === "listings" && window.GBListings && typeof window.GBListings.load === "function") {
     void window.GBListings.load();
   }
+  if (name === "detail" && window.GBDetail && typeof window.GBDetail.load === "function") {
+    void window.GBDetail.load();
+  }
+  if (name === "renter-dashboard" && window.GBBookings && typeof window.GBBookings.loadRenter === "function") {
+    void window.GBBookings.loadRenter();
+  }
+  if (name === "owner-dashboard" && window.GBBookings && typeof window.GBBookings.loadOwner === "function") {
+    void window.GBBookings.loadOwner();
+  }
+  if (name === "add-listing" && window.GBAddListing) {
+    if (typeof window.GBAddListing.bind === "function") {
+      window.GBAddListing.bind();
+    }
+    if (typeof window.GBAddListing.onShow === "function") {
+      window.GBAddListing.onShow();
+    }
+  }
 }
 
 window.__openAuth = function (tab) {

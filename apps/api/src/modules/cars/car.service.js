@@ -268,6 +268,26 @@ async function listPublicCars(options) {
   return { items, total, page, limit };
 }
 
+async function getPublicCarById(id) {
+  ensureValidObjectId(id, "car id");
+  const car = await Car.findOne({
+    _id: id,
+    status: "active",
+    "verification.status": "verified",
+  })
+    .populate("ownerId", "name")
+    .lean()
+    .exec();
+
+  if (!car) {
+    const err = new Error("Car not found");
+    err.status = 404;
+    throw err;
+  }
+
+  return car;
+}
+
 module.exports = {
   MODERATION_ACTIONS,
   createCar,
@@ -278,4 +298,5 @@ module.exports = {
   listPendingModerationCars,
   moderateCar,
   listPublicCars,
+  getPublicCarById,
 };

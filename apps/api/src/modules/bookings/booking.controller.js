@@ -5,10 +5,32 @@ const {
 } = require("./booking.validation");
 const bookingService = require("./booking.service");
 
-function sanitizeBooking(booking) {
+function bookingCarSummary(car) {
+  if (!car || typeof car !== "object" || !car._id) {
+    return null;
+  }
+  const image = Array.isArray(car.images) && car.images[0] ? car.images[0] : null;
   return {
+    id: car._id,
+    title: car.title,
+    brand: car.brand,
+    model: car.model,
+    year: car.year,
+    image,
+    basePricePerDay: car.basePricePerDay,
+    currency: car.currency,
+    location: car.location,
+  };
+}
+
+function sanitizeBooking(booking) {
+  const carId =
+    booking.carId && typeof booking.carId === "object" && booking.carId._id
+      ? booking.carId._id
+      : booking.carId;
+  const out = {
     id: booking._id,
-    carId: booking.carId,
+    carId,
     ownerId: booking.ownerId,
     renterId: booking.renterId,
     startDate: booking.startDate,
@@ -22,6 +44,10 @@ function sanitizeBooking(booking) {
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
   };
+  if (booking.carId && typeof booking.carId === "object" && booking.carId._id) {
+    out.car = bookingCarSummary(booking.carId);
+  }
+  return out;
 }
 
 async function createBooking(req, res, next) {

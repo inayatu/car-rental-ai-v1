@@ -6,6 +6,7 @@ const { uploadSingle } = require("../../middlewares/upload.middleware");
 const router = express.Router();
 
 router.get("/", carController.listPublicCars);
+router.get("/public/:id", carController.getPublicCarById);
 
 router.post(
   "/",

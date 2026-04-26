@@ -635,6 +635,34 @@ const openApiSpec = {
         },
       },
     },
+    "/api/v1/cars/public/{id}": {
+      get: {
+        tags: ["Cars"],
+        summary: "Public: get a single active, verified car by id",
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Public car",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { car: { $ref: "#/components/schemas/Car" } },
+                },
+              },
+            },
+          },
+          404: { description: "Not found or not publicly visible" },
+        },
+      },
+    },
     "/api/v1/cars/mine": {
       get: {
         tags: ["Cars"],
