@@ -13,17 +13,21 @@ const loginSchema = z.object({
   password: z.string().min(8),
 });
 
-const refreshSchema = z.object({
-  refreshToken: z.string().min(10),
-});
+const refreshBodySchema = z
+  .object({
+    refreshToken: z.string().min(10).optional(),
+  })
+  .strict();
 
-const logoutSchema = z.object({
-  refreshToken: z.string().min(10),
-});
+const logoutBodySchema = z
+  .object({
+    refreshToken: z.string().min(10).optional(),
+  })
+  .strict();
 
 module.exports = {
   registerSchema,
   loginSchema,
-  refreshSchema,
-  logoutSchema,
+  refreshBodySchema,
+  logoutBodySchema,
 };

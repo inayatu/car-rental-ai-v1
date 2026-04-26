@@ -5,6 +5,8 @@ const { uploadSingle } = require("../../middlewares/upload.middleware");
 
 const router = express.Router();
 
+router.get("/", carController.listPublicCars);
+
 router.post(
   "/",
   requireAuth(["owner"]),

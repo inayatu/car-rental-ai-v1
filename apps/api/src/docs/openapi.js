@@ -89,16 +89,28 @@ const openApiSpec = {
       },
       RefreshRequest: {
         type: "object",
-        required: ["refreshToken"],
         properties: {
-          refreshToken: { type: "string" },
+          refreshToken: {
+            type: "string",
+            description: "Optional if refreshToken cookie is set",
+          },
         },
       },
       LogoutRequest: {
         type: "object",
-        required: ["refreshToken"],
         properties: {
-          refreshToken: { type: "string" },
+          refreshToken: {
+            type: "string",
+            description: "Optional if refreshToken cookie is set",
+          },
+        },
+      },
+      MeResponse: {
+        type: "object",
+        properties: {
+          user: {
+            anyOf: [{ $ref: "#/components/schemas/User" }, { type: "null" }],
+          },
         },
       },
       CarDocument: {
@@ -271,6 +283,20 @@ const openApiSpec = {
         },
       },
     },
+    "/api/v1/auth/me": {
+      get: {
+        tags: ["Auth"],
+        summary: "Current session (reads access/refresh cookies; may rotate refresh)",
+        responses: {
+          200: {
+            description: "user is null when not logged in",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/MeResponse" } },
+            },
+          },
+        },
+      },
+    },
     "/api/v1/auth/register": {
       post: {
         tags: ["Auth"],
@@ -318,9 +344,9 @@ const openApiSpec = {
     "/api/v1/auth/refresh": {
       post: {
         tags: ["Auth"],
-        summary: "Refresh access token",
+        summary: "Refresh access token (body or refreshToken cookie)",
         requestBody: {
-          required: true,
+          required: false,
           content: {
             "application/json": { schema: { $ref: "#/components/schemas/RefreshRequest" } },
           },
@@ -339,9 +365,9 @@ const openApiSpec = {
     "/api/v1/auth/logout": {
       post: {
         tags: ["Auth"],
-        summary: "Logout user",
+        summary: "Logout user (clears cookies; body optional if refreshToken cookie is set)",
         requestBody: {
-          required: true,
+          required: false,
           content: {
             "application/json": { schema: { $ref: "#/components/schemas/LogoutRequest" } },
           },
@@ -491,6 +517,52 @@ const openApiSpec = {
       },
     },
     "/api/v1/cars": {
+      get: {
+        tags: ["Cars"],
+        summary: "Public: list active, verified cars (filters, pagination)",
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 12, maximum: 50 } },
+          { name: "q", in: "query", schema: { type: "string" }, description: "Search title, brand, model" },
+          { name: "district", in: "query", schema: { type: "string" } },
+          { name: "minPrice", in: "query", schema: { type: "number" } },
+          { name: "maxPrice", in: "query", schema: { type: "number" } },
+          {
+            name: "fuelType",
+            in: "query",
+            schema: { type: "string", enum: ["petrol", "diesel", "hybrid", "electric"] },
+          },
+          {
+            name: "transmission",
+            in: "query",
+            schema: { type: "string", enum: ["manual", "automatic"] },
+          },
+          {
+            name: "sort",
+            in: "query",
+            schema: { type: "string", enum: ["newest", "price_asc", "price_desc"], default: "newest" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Paginated list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    cars: { type: "array", items: { $ref: "#/components/schemas/Car" } },
+                    page: { type: "integer" },
+                    limit: { type: "integer" },
+                    total: { type: "integer" },
+                    totalPages: { type: "integer" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       post: {
         tags: ["Cars"],
         summary: "Create car (owner only)",

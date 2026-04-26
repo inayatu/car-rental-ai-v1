@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const requestLogger = require("./middlewares/request-logger.middleware");
 const logger = require("./utils/logger");
@@ -10,7 +11,13 @@ const registerRoutes = require("./routes");
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 app.use(requestLogger);
 

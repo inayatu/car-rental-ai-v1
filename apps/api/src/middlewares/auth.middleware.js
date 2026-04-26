@@ -1,18 +1,39 @@
 const { verifyAccessToken } = require("../utils/jwt");
+const authService = require("../modules/auth/auth.service");
+const {
+  getAccessTokenFromRequest,
+  getRefreshTokenFromRequest,
+  setAuthCookies,
+} = require("../modules/auth/auth.cookies");
 
 function requireAuth(roles = []) {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization || "";
-      const [scheme, token] = authHeader.split(" ");
+      const token = getAccessTokenFromRequest(req);
+      let payload = null;
 
-      if (scheme !== "Bearer" || !token) {
-        return res
-          .status(401)
-          .json({ message: "Missing or invalid Authorization header" });
+      if (token) {
+        try {
+          payload = verifyAccessToken(token);
+        } catch {
+          /* access expired or invalid */
+        }
       }
 
-      const payload = verifyAccessToken(token);
+      if (!payload) {
+        const refreshToken = getRefreshTokenFromRequest(req);
+        if (!refreshToken) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        try {
+          const result = await authService.refresh({ refreshToken });
+          setAuthCookies(res, result.accessToken, result.refreshToken);
+          payload = verifyAccessToken(result.accessToken);
+        } catch {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+      }
+
       req.user = payload;
 
       if (roles.length > 0 && !roles.includes(payload.role)) {
@@ -20,7 +41,7 @@ function requireAuth(roles = []) {
       }
 
       return next();
-    } catch (_error) {
+    } catch (error) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
   };

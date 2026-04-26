@@ -3,6 +3,7 @@ const {
   updateCarSchema,
   carIdParamsSchema,
   moderateCarSchema,
+  publicCarListQuerySchema,
 } = require("./car.validation");
 const carService = require("./car.service");
 const { processCarUploads } = require("./car-upload.service");
@@ -129,6 +130,30 @@ function buildUpdatePayload(body, uploadData) {
   return payload;
 }
 
+function sanitizePublicCar(car) {
+  const ownerName =
+    car.ownerId && typeof car.ownerId === "object" && car.ownerId.name
+      ? car.ownerId.name
+      : null;
+  return {
+    id: car._id,
+    title: car.title,
+    brand: car.brand,
+    model: car.model,
+    year: car.year,
+    seats: car.seats,
+    fuelType: car.fuelType,
+    transmission: car.transmission,
+    basePricePerDay: car.basePricePerDay,
+    currency: car.currency,
+    location: car.location,
+    description: car.description,
+    images: car.images,
+    ownerName,
+    verification: { verifiedBadge: car.verification?.verifiedBadge },
+  };
+}
+
 function sanitizeCar(car) {
   return {
     id: car._id,
@@ -154,6 +179,23 @@ function sanitizeCar(car) {
     createdAt: car.createdAt,
     updatedAt: car.updatedAt,
   };
+}
+
+async function listPublicCars(req, res, next) {
+  try {
+    const query = publicCarListQuerySchema.parse(req.query);
+    const { items, total, page, limit } = await carService.listPublicCars(query);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / query.limit);
+    return res.status(200).json({
+      cars: items.map(sanitizePublicCar),
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages,
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function createCar(req, res, next) {
@@ -269,6 +311,7 @@ async function blacklistCar(req, res, next) {
 }
 
 module.exports = {
+  listPublicCars,
   createCar,
   listMyCars,
   getMyCarById,

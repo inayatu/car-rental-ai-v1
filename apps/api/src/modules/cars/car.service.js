@@ -197,6 +197,77 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
   return car;
 }
 
+async function listPublicCars(options) {
+  const {
+    page = 1,
+    limit = 12,
+    minPrice,
+    maxPrice,
+    district,
+    fuelType,
+    transmission,
+    q,
+    sort = "newest",
+  } = options;
+
+  const filter = {
+    status: "active",
+    "verification.status": "verified",
+  };
+
+  const priceRange = {};
+  if (minPrice != null) {
+    priceRange.$gte = minPrice;
+  }
+  if (maxPrice != null) {
+    priceRange.$lte = maxPrice;
+  }
+  if (Object.keys(priceRange).length > 0) {
+    filter.basePricePerDay = priceRange;
+  }
+
+  if (fuelType) {
+    filter.fuelType = fuelType;
+  }
+  if (transmission) {
+    filter.transmission = transmission;
+  }
+
+  if (district && district.trim()) {
+    const safe = district.trim();
+    filter["location.district"] = { $regex: new RegExp(safe.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") };
+  }
+
+  if (q && q.trim()) {
+    const terms = q.trim();
+    const rx = new RegExp(terms.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    filter.$or = [{ title: rx }, { brand: rx }, { model: rx }, { description: rx }];
+  }
+
+  const skip = (page - 1) * limit;
+  let sortDef = { createdAt: -1 };
+  if (sort === "price_asc") {
+    sortDef = { basePricePerDay: 1 };
+  } else if (sort === "price_desc") {
+    sortDef = { basePricePerDay: -1 };
+  } else {
+    sortDef = { createdAt: -1 };
+  }
+
+  const [items, total] = await Promise.all([
+    Car.find(filter)
+      .sort(sortDef)
+      .skip(skip)
+      .limit(limit)
+      .populate("ownerId", "name")
+      .lean()
+      .exec(),
+    Car.countDocuments(filter),
+  ]);
+
+  return { items, total, page, limit };
+}
+
 module.exports = {
   MODERATION_ACTIONS,
   createCar,
@@ -206,4 +277,5 @@ module.exports = {
   deleteOwnerCar,
   listPendingModerationCars,
   moderateCar,
+  listPublicCars,
 };

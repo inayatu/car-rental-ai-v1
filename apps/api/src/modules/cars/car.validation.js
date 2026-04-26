@@ -60,9 +60,24 @@ const moderateCarSchema = z.object({
   notes: z.string().min(3).optional(),
 });
 
+const publicCarListQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(12),
+    minPrice: z.coerce.number().min(0).optional(),
+    maxPrice: z.coerce.number().min(0).optional(),
+    district: z.string().max(100).optional(),
+    fuelType: z.enum(["petrol", "diesel", "hybrid", "electric"]).optional(),
+    transmission: z.enum(["manual", "automatic"]).optional(),
+    q: z.string().max(200).optional(),
+    sort: z.enum(["newest", "price_asc", "price_desc"]).default("newest"),
+  })
+  .strip();
+
 module.exports = {
   createCarSchema,
   updateCarSchema,
   carIdParamsSchema,
   moderateCarSchema,
+  publicCarListQuerySchema,
 };
