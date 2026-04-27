@@ -34,12 +34,75 @@
     }
   }
 
+  function fillModelOptions(brand) {
+    const w = typeof window !== "undefined" ? window : {};
+    const O = w.GBVehicleOptions;
+    const modelEl = el("addListingModel");
+    if (!O || !modelEl) return;
+    const list = O.getModelsForBrand(brand);
+    const current = modelEl.value;
+    modelEl.innerHTML = "";
+    for (var i = 0; i < list.length; i += 1) {
+      const name = list[i];
+      const o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      modelEl.appendChild(o);
+    }
+    if (current && list.indexOf(current) >= 0) {
+      modelEl.value = current;
+    }
+  }
+
+  function initVehicleSelects() {
+    const w = typeof window !== "undefined" ? window : {};
+    const O = w.GBVehicleOptions;
+    if (!O) return;
+    const brandEl = el("addListingBrand");
+    const modelEl = el("addListingModel");
+    const colorEl = el("addListingColor");
+    if (brandEl && !brandEl._gbVoInit) {
+      brandEl._gbVoInit = true;
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = "Select…";
+      brandEl.appendChild(first);
+      for (var bi = 0; bi < O.CAR_BRANDS.length; bi += 1) {
+        const name = O.CAR_BRANDS[bi];
+        const o = document.createElement("option");
+        o.value = name;
+        o.textContent = name;
+        brandEl.appendChild(o);
+      }
+      brandEl.addEventListener("change", function () {
+        fillModelOptions(brandEl.value);
+      });
+    }
+    if (colorEl && !colorEl._gbVoInit) {
+      colorEl._gbVoInit = true;
+      const c0 = document.createElement("option");
+      c0.value = "";
+      c0.textContent = "Not specified";
+      colorEl.appendChild(c0);
+      for (var ci = 0; ci < O.CAR_COLORS.length; ci += 1) {
+        const c = O.CAR_COLORS[ci];
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c;
+        colorEl.appendChild(o);
+      }
+    }
+    if (brandEl && modelEl && brandEl.options && brandEl.options.length > 0) {
+      if (!brandEl.value) {
+        brandEl.value = O.defaultBrand;
+      }
+      fillModelOptions(brandEl.value);
+    }
+  }
+
   function buildDescription() {
     const base = (el("addListingDescription") && el("addListingDescription").value.trim()) || "";
-    const vt = (el("addListingVehicleType") && el("addListingVehicleType").value) || "";
-    const prefix = vt ? `Vehicle type: ${vt}\n\n` : "";
-    const out = (prefix + base).trim();
-    return out || undefined;
+    return base || undefined;
   }
 
   function appendIf(fd, key, value) {
@@ -71,8 +134,8 @@
       showError("Please add at least one vehicle photo (JPEG, PNG, or WebP).");
       return;
     }
-    if (images.length > 10) {
-      showError("Maximum 10 photos.");
+    if (images.length > 5) {
+      showError("Maximum 5 photos.");
       return;
     }
 
@@ -82,10 +145,17 @@
       return;
     }
 
+    const vType = el("addListingVehicleType") && el("addListingVehicleType").value;
+    if (!vType) {
+      showError("Select a vehicle type (SUV, sedan, pickup, etc.).");
+      return;
+    }
+
     const fd = new FormData();
     fd.append("title", title);
     fd.append("brand", brand);
     fd.append("model", model);
+    fd.append("vehicleType", vType);
     fd.append("year", String(parseInt(year, 10)));
     fd.append("registrationNumber", reg);
     fd.append("district", district);
@@ -192,6 +262,7 @@
     const form = el("form-add-listing");
     if (!form || form._gbAddListingBound) return;
     form._gbAddListingBound = true;
+    initVehicleSelects();
     const a = el("addListingSubmitActive");
     const d = el("addListingSubmitDraft");
     if (a) {
@@ -214,6 +285,7 @@
     }
     showError("");
     showSuccess("");
+    initVehicleSelects();
   }
 
   window.GBAddListing = {

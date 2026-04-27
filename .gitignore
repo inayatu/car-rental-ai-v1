@@ -27,6 +27,10 @@ temp/
 .cache/
 .DS_Store
 
+# User content uploads (API: car images, documents, multer temp) — not for git
+apps/api/uploads/
+**/uploads/cars/**
+
 # IDE/editor
 .idea/
 .vscode/

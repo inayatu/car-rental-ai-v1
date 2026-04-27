@@ -21,6 +21,38 @@ function loadPartials() {
   ]);
 }
 
+// ── Owner my bookings: tab (matches apps/web /dashboard/owner/bookings?tab=…) ──
+window.__ownerBookingsTab = "pending";
+
+/**
+ * @param {string} t pending | upcoming | active | completed | declined
+ */
+function syncOwnerBookingsTabBar() {
+  var t = window.__ownerBookingsTab || "pending";
+  var bar = document.getElementById("ownerBookingTabBar");
+  if (bar) {
+    bar.querySelectorAll("[data-owner-btab]").forEach(function (btn) {
+      var on = btn.getAttribute("data-owner-btab") === t;
+      btn.style.outline = on ? "2px solid var(--amber, #c9a44e)" : "none";
+      btn.style.fontWeight = on ? "700" : "500";
+    });
+  }
+}
+
+/**
+ * @param {string} t
+ */
+function setOwnerBookingsTab(t) {
+  const allow = new Set(["pending", "upcoming", "active", "completed", "declined"]);
+  window.__ownerBookingsTab = allow.has(t) ? t : "pending";
+  syncOwnerBookingsTabBar();
+  if (window.GBBookings && typeof window.GBBookings.loadOwner === "function") {
+    void window.GBBookings.loadOwner();
+  }
+}
+window.setOwnerBookingsTab = setOwnerBookingsTab;
+window.syncOwnerBookingsTabBar = syncOwnerBookingsTabBar;
+
 // ── PAGE ROUTING (applyPage = no auth check; showPage = guarded) ──
 function applyPage(name) {
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
@@ -49,6 +81,10 @@ async function showPage(name) {
     void window.GBBookings.loadRenter();
   }
   if (name === "owner-dashboard" && window.GBBookings && typeof window.GBBookings.loadOwner === "function") {
+    void window.GBBookings.loadOwner();
+  }
+  if (name === "owner-bookings" && window.GBBookings && typeof window.GBBookings.loadOwner === "function") {
+    if (window.syncOwnerBookingsTabBar) window.syncOwnerBookingsTabBar();
     void window.GBBookings.loadOwner();
   }
   if (name === "add-listing" && window.GBAddListing) {

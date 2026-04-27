@@ -5,21 +5,31 @@ const {
 } = require("./booking.validation");
 const bookingService = require("./booking.service");
 
+/** Renter (and clients) only receive host identity once the rental is agreed or finished — not on requests or declines. */
+const BOOKING_STATUS_WITH_HOST = new Set(["accepted", "completed"]);
+
 function bookingCarSummary(car) {
   if (!car || typeof car !== "object" || !car._id) {
     return null;
   }
-  const image = Array.isArray(car.images) && car.images[0] ? car.images[0] : null;
+  const images = Array.isArray(car.images) ? car.images.filter(Boolean) : [];
   return {
     id: car._id,
     title: car.title,
     brand: car.brand,
     model: car.model,
     year: car.year,
-    image,
+    image: images[0] || null,
+    images: images.slice(0, 5),
     basePricePerDay: car.basePricePerDay,
     currency: car.currency,
     location: car.location,
+    color: car.color,
+    vehicleType: car.vehicleType,
+    registrationNumber: car.registrationNumber,
+    seats: car.seats,
+    transmission: car.transmission,
+    fuelType: car.fuelType,
   };
 }
 
@@ -28,13 +38,26 @@ function sanitizeBooking(booking) {
     booking.carId && typeof booking.carId === "object" && booking.carId._id
       ? booking.carId._id
       : booking.carId;
+  const renterId =
+    booking.renterId && typeof booking.renterId === "object" && booking.renterId._id
+      ? booking.renterId._id
+      : booking.renterId;
+  const ownerId =
+    booking.ownerId && typeof booking.ownerId === "object" && booking.ownerId._id
+      ? booking.ownerId._id
+      : booking.ownerId;
+  const exposeHost = BOOKING_STATUS_WITH_HOST.has(booking.status);
   const out = {
     id: booking._id,
     carId,
-    ownerId: booking.ownerId,
-    renterId: booking.renterId,
+    renterId,
     startDate: booking.startDate,
     endDate: booking.endDate,
+    renterName: booking.renterName,
+    numberOfPersons: booking.numberOfPersons,
+    renterPhone: booking.renterPhone,
+    renterEmail: booking.renterEmail,
+    notes: booking.notes,
     totalDays: booking.totalDays,
     quotedAmount: booking.quotedAmount,
     currency: booking.currency,
@@ -46,6 +69,32 @@ function sanitizeBooking(booking) {
   };
   if (booking.carId && typeof booking.carId === "object" && booking.carId._id) {
     out.car = bookingCarSummary(booking.carId);
+  }
+  if (exposeHost) {
+    out.ownerId = ownerId;
+  }
+  if (
+    booking.renterId &&
+    typeof booking.renterId === "object" &&
+    (booking.renterId._id || "name" in booking.renterId)
+  ) {
+    out.renterAccount = {
+      name: booking.renterId.name,
+      email: booking.renterId.email,
+      phone: booking.renterId.phone,
+    };
+  }
+  if (
+    exposeHost &&
+    booking.ownerId &&
+    typeof booking.ownerId === "object" &&
+    ("name" in booking.ownerId || "email" in booking.ownerId || "phone" in booking.ownerId)
+  ) {
+    out.ownerAccount = {
+      name: booking.ownerId.name,
+      email: booking.ownerId.email,
+      phone: booking.ownerId.phone,
+    };
   }
   return out;
 }

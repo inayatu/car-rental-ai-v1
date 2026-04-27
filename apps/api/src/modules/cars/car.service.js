@@ -17,8 +17,10 @@ function ensureValidObjectId(id, fieldName = "id") {
 
 async function createCar(ownerId, payload) {
   const now = new Date();
+  const images = Array.isArray(payload.images) ? payload.images.slice(0, 5) : payload.images;
   const car = await Car.create({
     ...payload,
+    images,
     ownerId,
     registrationNumber: payload.registrationNumber.toUpperCase(),
     verification: {
@@ -41,8 +43,13 @@ async function createCar(ownerId, payload) {
   return car;
 }
 
-async function listOwnerCars(ownerId) {
-  return Car.find({ ownerId }).sort({ createdAt: -1 });
+async function listOwnerCars(ownerId, options = {}) {
+  const { includeDeleted = false } = options;
+  const filter = { ownerId };
+  if (!includeDeleted) {
+    filter.isDeleted = { $ne: true };
+  }
+  return Car.find(filter).sort({ createdAt: -1 });
 }
 
 async function getOwnerCarById(ownerId, carId) {
@@ -61,6 +68,9 @@ async function getOwnerCarById(ownerId, carId) {
 async function updateOwnerCar(ownerId, carId, updates) {
   ensureValidObjectId(carId, "car id");
   const payload = { ...updates };
+  if (Array.isArray(payload.images)) {
+    payload.images = payload.images.slice(0, 5);
+  }
 
   if (payload.registrationNumber) {
     payload.registrationNumber = payload.registrationNumber.toUpperCase();
@@ -97,6 +107,11 @@ async function updateOwnerCar(ownerId, carId, updates) {
     err.status = 404;
     throw err;
   }
+  if (car.isDeleted) {
+    const err = new Error("This listing was removed. Restore it before editing.");
+    err.status = 400;
+    throw err;
+  }
 
   Object.keys(payload).forEach((key) => {
     if (key !== "$push") {
@@ -116,19 +131,40 @@ async function updateOwnerCar(ownerId, carId, updates) {
 async function deleteOwnerCar(ownerId, carId) {
   ensureValidObjectId(carId, "car id");
 
-  const deleted = await Car.findOneAndDelete({ _id: carId, ownerId });
-  if (!deleted) {
-    const err = new Error("Car not found");
+  const updated = await Car.findOneAndUpdate(
+    { _id: carId, ownerId, isDeleted: { $ne: true } },
+    { $set: { isDeleted: true, deletedAt: new Date() } },
+    { new: true }
+  );
+  if (!updated) {
+    const err = new Error("Car not found or already removed");
     err.status = 404;
     throw err;
   }
 
-  return { success: true };
+  return { success: true, soft: true, car: updated };
+}
+
+async function restoreOwnerCar(ownerId, carId) {
+  ensureValidObjectId(carId, "car id");
+
+  const car = await Car.findOneAndUpdate(
+    { _id: carId, ownerId, isDeleted: true },
+    { $set: { isDeleted: false, deletedAt: null } },
+    { new: true }
+  );
+  if (!car) {
+    const err = new Error("Car not found or not removed");
+    err.status = 404;
+    throw err;
+  }
+  return car;
 }
 
 async function listPendingModerationCars() {
   return Car.find({
     "verification.status": { $in: ["pending", "unverified"] },
+    isDeleted: { $ne: true },
   }).sort({ createdAt: -1 });
 }
 
@@ -145,6 +181,11 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
   const car = await Car.findById(carId);
   if (!car) {
     const err = new Error("Car not found");
+    err.status = 404;
+    throw err;
+  }
+  if (car.isDeleted) {
+    const err = new Error("This listing is no longer active");
     err.status = 404;
     throw err;
   }
@@ -206,6 +247,7 @@ async function listPublicCars(options) {
     district,
     fuelType,
     transmission,
+    vehicleType,
     q,
     sort = "newest",
   } = options;
@@ -213,6 +255,7 @@ async function listPublicCars(options) {
   const filter = {
     status: "active",
     "verification.status": "verified",
+    isDeleted: { $ne: true },
   };
 
   const priceRange = {};
@@ -231,6 +274,9 @@ async function listPublicCars(options) {
   }
   if (transmission) {
     filter.transmission = transmission;
+  }
+  if (vehicleType) {
+    filter.vehicleType = vehicleType;
   }
 
   if (district && district.trim()) {
@@ -274,6 +320,7 @@ async function getPublicCarById(id) {
     _id: id,
     status: "active",
     "verification.status": "verified",
+    isDeleted: { $ne: true },
   })
     .populate("ownerId", "name")
     .lean()
@@ -295,6 +342,7 @@ module.exports = {
   getOwnerCarById,
   updateOwnerCar,
   deleteOwnerCar,
+  restoreOwnerCar,
   listPendingModerationCars,
   moderateCar,
   listPublicCars,

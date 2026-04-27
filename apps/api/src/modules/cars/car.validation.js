@@ -34,6 +34,7 @@ const createCarSchema = z.object({
   seats: z.number().int().min(1).max(12).optional(),
   transmission: z.enum(["manual", "automatic"]).optional(),
   fuelType: z.enum(["petrol", "diesel", "hybrid", "electric"]).optional(),
+  vehicleType: z.enum(["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"]),
   basePricePerDay: z.number().nonnegative(),
   currency: z.string().min(3).max(3).optional(),
   location: z.object({
@@ -42,7 +43,7 @@ const createCarSchema = z.object({
   }),
   status: z.enum(["draft", "active", "paused"]).optional(),
   description: z.string().optional(),
-  images: z.array(fileUrlSchema).optional(),
+  images: z.array(fileUrlSchema).max(5).optional(),
   documents: z.array(carDocumentSchema).min(1),
 });
 
@@ -69,6 +70,7 @@ const publicCarListQuerySchema = z
     district: z.string().max(100).optional(),
     fuelType: z.enum(["petrol", "diesel", "hybrid", "electric"]).optional(),
     transmission: z.enum(["manual", "automatic"]).optional(),
+    vehicleType: z.enum(["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"]).optional(),
     q: z.string().max(200).optional(),
     sort: z.enum(["newest", "price_asc", "price_desc"]).default("newest"),
   })

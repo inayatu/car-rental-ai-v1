@@ -7,6 +7,7 @@
   const PROTECTED_PAGES = {
     "renter-dashboard": ["renter", "owner", "admin", "govt_staff"],
     "owner-dashboard": ["owner", "admin", "govt_staff"],
+    "owner-bookings": ["owner", "admin", "govt_staff"],
     "add-listing": ["owner", "admin", "govt_staff"],
   };
 

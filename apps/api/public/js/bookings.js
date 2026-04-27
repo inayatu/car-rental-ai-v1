@@ -26,6 +26,54 @@
     return `${a.toLocaleDateString("en-GB", o)} – ${b.toLocaleDateString("en-GB", o)}`;
   }
 
+  function startOfLocalDay(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  function endOfLocalDay(d) {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  }
+
+  /** @param {any} b */
+  function isUpcomingAccepted(b) {
+    if (b.status !== "accepted") return false;
+    return new Date(b.startDate).getTime() > endOfLocalDay(new Date()).getTime();
+  }
+
+  /** @param {any} b */
+  function isOngoingAccepted(b) {
+    if (b.status !== "accepted") return false;
+    const now = new Date();
+    const s = startOfLocalDay(new Date(b.startDate));
+    const e = startOfLocalDay(new Date(b.endDate));
+    const today = startOfLocalDay(now);
+    if (s.getTime() > today.getTime()) return false;
+    if (e.getTime() < today.getTime()) return false;
+    return true;
+  }
+
+  /**
+   * Mirrors apps/web/src/lib/bookingTabFilters.js
+   * @param {any} b
+   * @param {string} tab
+   */
+  function ownerBookingInTab(b, tab) {
+    if (tab === "pending") return b.status === "requested";
+    if (tab === "upcoming") return isUpcomingAccepted(b);
+    if (tab === "active") {
+      if (b.status !== "accepted") return false;
+      if (isUpcomingAccepted(b)) return false;
+      return true;
+    }
+    if (tab === "completed") return b.status === "completed";
+    if (tab === "declined") return b.status === "rejected" || b.status === "cancelled";
+    return false;
+  }
+
   function statusBadge(status) {
     const map = {
       requested: "⏳ Requested",
@@ -231,17 +279,51 @@
       .map((b) => {
         const cur = b.currency || "PKR";
         const amt = b.quotedAmount != null ? Math.round(Number(b.quotedAmount)) : "—";
+        const fmt = (v) => (v != null && String(v).trim() !== "" ? escapeHtml(String(v)) : "—");
+        const acc = b.renterAccount;
+        const accLine =
+          acc && (acc.name || acc.email || acc.phone)
+            ? `<div class="text-xs text-muted mt-2" style="line-height:1.5"><strong>Account on file:</strong> ${[
+                acc.name,
+                acc.email,
+                acc.phone,
+              ]
+                .filter(Boolean)
+                .map(escapeHtml)
+                .join(" · ")}</div>`
+            : "";
         return `
-        <div class="booking-item" style="border-left:3px solid var(--amber)" data-booking-id="${String(b.id)}">
-          ${carIcon(b)}
-          <div class="booking-info">
+        <div class="booking-item booking-item--pending" style="border-left:3px solid var(--amber); flex-wrap:wrap; align-items:stretch" data-booking-id="${String(
+          b.id
+        )}">
+          <div style="display:flex;gap:0.75rem;align-items:flex-start;flex:1;min-width:0">
+            ${carIcon(b)}
+            <div class="booking-info" style="flex:1;min-width:0">
             <div class="booking-car-name">${carLine(b)}</div>
-            <div class="booking-dates">${escapeHtml(formatRange(b.startDate, b.endDate))} · ${
-          b.totalDays
-        } day(s)</div>
-            <div class="mt-1 text-sm text-muted">Booking #${String(b.id).slice(-6)}</div>
+            <div class="booking-dates">${escapeHtml(formatRange(b.startDate, b.endDate))} · ${b.totalDays} day${
+          b.totalDays === 1 ? "" : "s"
+        } · ${escapeHtml(cur)} ${typeof amt === "number" ? amt.toLocaleString("en-GB") : escapeHtml(String(amt))}</div>
+            <p class="text-sm mt-2" style="font-weight:600; margin-bottom:0.4rem">Renter details (with this request)</p>
+            <ul class="text-sm" style="margin:0;padding-left:1.1rem;line-height:1.65;color:var(--ink2)">
+              <li><strong>Name:</strong> ${fmt(b.renterName)}</li>
+              <li><strong>Phone:</strong> ${fmt(b.renterPhone)}</li>
+              <li><strong>Email:</strong> ${fmt(b.renterEmail)}</li>
+              <li><strong>Number of persons:</strong> ${
+                b.numberOfPersons != null && !Number.isNaN(Number(b.numberOfPersons))
+                  ? escapeHtml(String(b.numberOfPersons))
+                  : "—"
+              }</li>
+              <li><strong>Notes:</strong> ${b.notes ? "“" + escapeHtml(b.notes) + "”" : "—"}</li>
+            </ul>
+            ${accLine}
+            <div class="text-xs text-muted mt-1">#${String(b.id).slice(-6)}${
+          b.createdAt
+            ? ` · Requested ${new Date(b.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}`
+            : ""
+        }</div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;text-align:right">
+          <div style="display:flex;flex-direction:column;gap:0.5rem;text-align:right;justify-content:flex-end;min-width:7rem">
             <div class="booking-amount">${escapeHtml(cur)} ${
           typeof amt === "number" ? amt.toLocaleString("en-GB") : escapeHtml(String(amt))
         }</div>
@@ -307,6 +389,57 @@
     tb.innerHTML = rows;
   }
 
+  const ownerTabEmpty = {
+    pending: "No pending requests.",
+    upcoming: "No upcoming (future start) confirmed trips.",
+    active: "No active, in-progress, or open past trips in this list.",
+    completed: "No completed trips yet.",
+    declined: "No rejected or cancelled bookings.",
+  };
+
+  function renderOwnerFilteredList(mount, tab, bookings) {
+    const filtered = (bookings || []).filter((b) => ownerBookingInTab(b, tab));
+    if (filtered.length === 0) {
+      const msg = ownerTabEmpty[tab] || "Nothing in this tab.";
+      mount.innerHTML = '<p class="text-sm text-muted">' + msg + "</p>";
+      return;
+    }
+    const rows = filtered
+      .map((b) => {
+        const cur = b.currency || "PKR";
+        const amt = b.quotedAmount != null ? Math.round(Number(b.quotedAmount)) : "—";
+        return `
+        <div class="booking-item" style="border-left:3px solid var(--border)">
+          ${carIcon(b)}
+          <div class="booking-info">
+            <div class="booking-car-name">${carLine(b)}</div>
+            <div class="booking-dates">${escapeHtml(formatRange(b.startDate, b.endDate))} · ${b.totalDays} day${
+          b.totalDays === 1 ? "" : "s"
+        } · ${escapeHtml(cur)} ${typeof amt === "number" ? amt.toLocaleString("en-GB") : escapeHtml(String(amt))}</div>
+            <div class="mt-1">${statusBadge(b.status)}${
+          tab === "active" && b.status === "accepted"
+            ? (isOngoingAccepted(b) ? " <span class='badge' style='opacity:0.85'>In progress</span>" : " <span class='badge' style='opacity:0.85'>Trip ended · mark complete in app</span>")
+            : ""
+        }</div>
+          </div>
+        </div>`;
+      })
+      .join("");
+    mount.innerHTML = '<div class="bookings-list">' + rows + "</div>";
+  }
+
+  /**
+   * @param {HTMLElement} mount
+   * @param {any[]} list
+   * @param {string} tab
+   */
+  function renderOwnerByTab(mount, list, tab) {
+    if (tab === "pending") {
+      return renderOwnerPending(mount, list);
+    }
+    return renderOwnerFilteredList(mount, tab, list);
+  }
+
   function updateOwnerStats(bookings) {
     const pending = (bookings || []).filter((b) => b.status === "requested").length;
     const set = (id, v) => {
@@ -319,8 +452,10 @@
   }
 
   async function loadOwner() {
+    const tabbed = document.getElementById("ownerBookingsTabbedList");
     const pendingMount = document.getElementById("ownerBookingsPending");
     const table = document.getElementById("ownerBookingsTable");
+    if (tabbed) tabbed.innerHTML = '<p class="text-sm text-muted">Loading…</p>';
     if (pendingMount) pendingMount.innerHTML = '<p class="text-sm text-muted">Loading…</p>';
     if (table) {
       const tb = table.querySelector("tbody");
@@ -330,15 +465,20 @@
     try {
       data = await fetchMine();
     } catch (e) {
-      if (pendingMount) {
-        pendingMount.innerHTML = `<p class="text-sm" style="color:#c43c3c">${escapeHtml(e.message || String(e))}</p>`;
-      }
+      const errHtml = `<p class="text-sm" style="color:#c43c3c">${escapeHtml(e.message || String(e))}</p>`;
+      if (tabbed) tabbed.innerHTML = errHtml;
+      if (pendingMount) pendingMount.innerHTML = errHtml;
       return;
     }
     const list = data.bookings || [];
     updateOwnerStats(list);
-    if (pendingMount) renderOwnerPending(pendingMount, list);
-    if (table) renderOwnerAll(table, list);
+    const t = (window.__ownerBookingsTab && String(window.__ownerBookingsTab)) || "pending";
+    if (tabbed) {
+      renderOwnerByTab(tabbed, list, t);
+    } else {
+      if (pendingMount) renderOwnerPending(pendingMount, list);
+      if (table) renderOwnerAll(table, list);
+    }
   }
 
   window.GBBookings = {

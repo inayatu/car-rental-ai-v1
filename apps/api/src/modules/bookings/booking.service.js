@@ -4,7 +4,8 @@ const Car = require("../cars/car.model");
 
 const BLOCKING_BOOKING_STATUSES = new Set(["requested", "accepted"]);
 const ACTIVE_BOOKING_STATUSES = new Set(["requested", "accepted"]);
-const BOOKING_CAR_POPULATE_SELECT = "title brand model year images basePricePerDay location currency";
+const BOOKING_CAR_POPULATE_SELECT =
+  "title brand model year images basePricePerDay location currency color vehicleType registrationNumber seats transmission fuelType";
 
 function ensureValidObjectId(id, fieldName = "id") {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -12,6 +13,13 @@ function ensureValidObjectId(id, fieldName = "id") {
     err.status = 400;
     throw err;
   }
+}
+
+/** Renter id whether `renterId` is populated or a plain ObjectId. */
+function bookingRenterId(booking) {
+  const r = booking.renterId;
+  if (r && typeof r === "object" && r._id) return r._id;
+  return r;
 }
 
 function calculateTotalDays(startDate, endDate) {
@@ -110,6 +118,11 @@ async function createBooking(renterId, renterRole, payload) {
     carId: car._id,
     ownerId: car.ownerId,
     renterId,
+    renterName: payload.renterName,
+    numberOfPersons: payload.numberOfPersons,
+    renterPhone: payload.renterPhone,
+    renterEmail: payload.renterEmail,
+    notes: payload.notes,
     startDate,
     endDate,
     totalDays,
@@ -128,6 +141,8 @@ async function createBooking(renterId, renterRole, payload) {
   });
 
   await booking.populate("carId", BOOKING_CAR_POPULATE_SELECT);
+  await booking.populate("renterId", "name email phone");
+  await booking.populate("ownerId", "name email phone");
   return booking;
 }
 
@@ -144,12 +159,17 @@ async function listMyBookings(actorId, actorRole) {
 
   return Booking.find(query)
     .sort({ createdAt: -1 })
-    .populate("carId", BOOKING_CAR_POPULATE_SELECT);
+    .populate("carId", BOOKING_CAR_POPULATE_SELECT)
+    .populate("renterId", "name email phone")
+    .populate("ownerId", "name email phone");
 }
 
 async function getBookingByIdForActor(actorId, actorRole, bookingId) {
   ensureValidObjectId(bookingId, "booking id");
-  const booking = await Booking.findById(bookingId).populate("carId", BOOKING_CAR_POPULATE_SELECT);
+  const booking = await Booking.findById(bookingId)
+    .populate("carId", BOOKING_CAR_POPULATE_SELECT)
+    .populate("renterId", "name email phone")
+    .populate("ownerId", "name email phone");
   if (!booking) {
     const err = new Error("Booking not found");
     err.status = 404;
@@ -160,7 +180,7 @@ async function getBookingByIdForActor(actorId, actorRole, bookingId) {
     return booking;
   }
 
-  const isRenter = String(booking.renterId) === String(actorId);
+  const isRenter = String(bookingRenterId(booking)) === String(actorId);
   const isOwner = String(booking.ownerId) === String(actorId);
   if (!isRenter && !isOwner) {
     const err = new Error("Forbidden");
@@ -174,7 +194,7 @@ async function getBookingByIdForActor(actorId, actorRole, bookingId) {
 function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
   const requestedStatus = updates.status;
   const currentStatus = booking.status;
-  const isRenter = String(booking.renterId) === String(actorId);
+  const isRenter = String(bookingRenterId(booking)) === String(actorId);
   const isOwner = String(booking.ownerId) === String(actorId);
   const isStaff = actorRole === "admin" || actorRole === "govt_staff";
 
@@ -267,6 +287,8 @@ async function updateBookingStatus(actorId, actorRole, bookingId, updates) {
 
   await booking.save();
   await booking.populate("carId", BOOKING_CAR_POPULATE_SELECT);
+  await booking.populate("renterId", "name email phone");
+  await booking.populate("ownerId", "name email phone");
   return booking;
 }
 
@@ -274,7 +296,7 @@ async function deleteBooking(actorId, actorRole, bookingId) {
   const booking = await getBookingByIdForActor(actorId, actorRole, bookingId);
 
   const isStaff = actorRole === "admin" || actorRole === "govt_staff";
-  const isRenter = String(booking.renterId) === String(actorId);
+  const isRenter = String(bookingRenterId(booking)) === String(actorId);
   if (!isStaff && !isRenter) {
     const err = new Error("Forbidden");
     err.status = 403;

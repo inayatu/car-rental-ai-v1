@@ -149,6 +149,11 @@ const openApiSpec = {
             type: "string",
             enum: ["petrol", "diesel", "hybrid", "electric"],
           },
+          vehicleType: {
+            type: "string",
+            enum: ["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"],
+            description: "Body style for public filters",
+          },
           basePricePerDay: { type: "number" },
           currency: { type: "string", example: "PKR" },
           location: { $ref: "#/components/schemas/CarLocation" },
@@ -186,6 +191,7 @@ const openApiSpec = {
           "basePricePerDay",
           "location",
           "documents",
+          "vehicleType",
         ],
         properties: {
           title: { type: "string", example: "Toyota Prado TX 2018" },
@@ -199,6 +205,11 @@ const openApiSpec = {
           fuelType: {
             type: "string",
             enum: ["petrol", "diesel", "hybrid", "electric"],
+          },
+          vehicleType: {
+            type: "string",
+            enum: ["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"],
+            example: "suv_4wd",
           },
           basePricePerDay: { type: "number", example: 15000 },
           currency: { type: "string", example: "PKR" },
@@ -218,11 +229,24 @@ const openApiSpec = {
       },
       CreateBookingRequest: {
         type: "object",
-        required: ["carId", "startDate", "endDate"],
+        required: [
+          "carId",
+          "startDate",
+          "endDate",
+          "renterName",
+          "numberOfPersons",
+          "renterPhone",
+          "renterEmail",
+        ],
         properties: {
           carId: { type: "string" },
           startDate: { type: "string", format: "date-time" },
           endDate: { type: "string", format: "date-time" },
+          renterName: { type: "string" },
+          numberOfPersons: { type: "integer", minimum: 1, maximum: 50 },
+          renterPhone: { type: "string" },
+          renterEmail: { type: "string", format: "email" },
+          notes: { type: "string", maxLength: 2000, description: "Optional message for the owner" },
         },
       },
       UpdateBookingRequest: {
@@ -241,10 +265,18 @@ const openApiSpec = {
         properties: {
           id: { type: "string" },
           carId: { type: "string" },
-          ownerId: { type: "string" },
+          ownerId: {
+            type: "string",
+            description: "Only included when status is accepted or completed (confirmed rental).",
+          },
           renterId: { type: "string" },
           startDate: { type: "string", format: "date-time" },
           endDate: { type: "string", format: "date-time" },
+          renterName: { type: "string" },
+          numberOfPersons: { type: "integer" },
+          renterPhone: { type: "string" },
+          renterEmail: { type: "string", format: "email" },
+          notes: { type: "string" },
           totalDays: { type: "integer" },
           quotedAmount: { type: "number" },
           currency: { type: "string", example: "PKR" },
@@ -259,6 +291,42 @@ const openApiSpec = {
           },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
+          car: {
+            type: "object",
+            description: "Populated car summary (list/detail)",
+            properties: {
+              id: { type: "string" },
+              title: { type: "string" },
+              brand: { type: "string" },
+              model: { type: "string" },
+              year: { type: "integer" },
+              image: { type: "string" },
+              images: { type: "array", items: { type: "string" } },
+              basePricePerDay: { type: "number" },
+              currency: { type: "string" },
+              location: { type: "object" },
+              color: { type: "string" },
+              vehicleType: { type: "string" },
+              registrationNumber: { type: "string" },
+            },
+          },
+          renterAccount: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: "string" },
+              phone: { type: "string" },
+            },
+          },
+          ownerAccount: {
+            type: "object",
+            description: "Host contact only when status is accepted or completed; omitted for requested/rejected/cancelled.",
+            properties: {
+              name: { type: "string" },
+              email: { type: "string" },
+              phone: { type: "string" },
+            },
+          },
         },
       },
     },
@@ -538,6 +606,15 @@ const openApiSpec = {
             schema: { type: "string", enum: ["manual", "automatic"] },
           },
           {
+            name: "vehicleType",
+            in: "query",
+            description: "Filter by body / vehicle class",
+            schema: {
+              type: "string",
+              enum: ["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"],
+            },
+          },
+          {
             name: "sort",
             in: "query",
             schema: { type: "string", enum: ["newest", "price_asc", "price_desc"], default: "newest" },
@@ -581,6 +658,7 @@ const openApiSpec = {
                   "registrationNumber",
                   "basePricePerDay",
                   "district",
+                  "vehicleType",
                 ],
                 properties: {
                   title: { type: "string" },
@@ -594,6 +672,10 @@ const openApiSpec = {
                   fuelType: {
                     type: "string",
                     enum: ["petrol", "diesel", "hybrid", "electric"],
+                  },
+                  vehicleType: {
+                    type: "string",
+                    enum: ["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"],
                   },
                   basePricePerDay: { type: "number" },
                   currency: { type: "string" },

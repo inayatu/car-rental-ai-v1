@@ -101,8 +101,10 @@ function processDocument(file, docType) {
   };
 }
 
+const MAX_CAR_IMAGES = 5;
+
 async function processCarUploads(files, documentTypesRaw) {
-  const imageFiles = Array.isArray(files?.images) ? files.images : [];
+  const imageFiles = (Array.isArray(files?.images) ? files.images : []).slice(0, MAX_CAR_IMAGES);
   const documentFiles = Array.isArray(files?.documents) ? files.documents : [];
   const documentTypes = parseDocumentTypes(documentTypesRaw);
 

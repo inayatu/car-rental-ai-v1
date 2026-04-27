@@ -12,6 +12,7 @@
     district: undefined,
     fuelType: undefined,
     transmission: undefined,
+    vehicleType: undefined,
     sort: "newest",
   };
 
@@ -42,6 +43,7 @@
     const district = getVal("listingsDistrict");
     const fuel = getVal("listingsFuel");
     const trans = getVal("listingsTrans");
+    const vType = getVal("listingsVehicleType");
     const sort = getVal("listingsSort") || "newest";
     return {
       page: 1,
@@ -51,6 +53,7 @@
       district: district || undefined,
       fuelType: fuel || undefined,
       transmission: trans || undefined,
+      vehicleType: vType || undefined,
       sort: ["newest", "price_asc", "price_desc"].includes(sort) ? sort : "newest",
     };
   }
@@ -65,6 +68,7 @@
     if (params.district) sp.set("district", params.district);
     if (params.fuelType) sp.set("fuelType", params.fuelType);
     if (params.transmission) sp.set("transmission", params.transmission);
+    if (params.vehicleType) sp.set("vehicleType", params.vehicleType);
     if (params.sort) sp.set("sort", params.sort);
     return sp.toString();
   }
@@ -79,11 +83,24 @@
     return f.charAt(0).toUpperCase() + f.slice(1);
   }
 
+  const vehicleTypeLabel = (v) => {
+    const map = {
+      suv_4wd: "SUV / 4WD",
+      jeep: "Jeep",
+      sedan: "Sedan",
+      van_coaster: "Van / Coaster",
+      pickup: "Pickup",
+      other: "Other",
+    };
+    return (v && map[v]) || "";
+  };
+
   function carCardHtml(c) {
     const price = c.basePricePerDay != null ? Math.round(c.basePricePerDay) : "—";
     const cur = c.currency || "PKR";
     const loc = c.location && c.location.district ? c.location.district : "—";
     const owner = c.ownerName || "Owner";
+    const vLabel = c.vehicleType ? vehicleTypeLabel(c.vehicleType) : "";
     const title = c.title || `${c.brand || ""} ${c.model || ""}`.trim() || "Vehicle";
     const img = Array.isArray(c.images) && c.images[0] ? c.images[0] : null;
     const rawId = c.id != null ? c.id : c._id;
@@ -103,6 +120,7 @@
           <div class="car-name">${escapeHtml(title)}</div>
           <div class="car-loc">📍 ${escapeHtml(loc)} · ${escapeHtml(owner)}</div>
           <div class="car-specs">
+            ${vLabel ? `<span class="car-spec">🚐 ${escapeHtml(vLabel)}</span>` : ""}
             <span class="car-spec">⛽ ${escapeHtml(fuelLabel(c.fuelType))}</span>
             <span class="car-spec">👥 ${c.seats != null ? c.seats : "—"} Seats</span>
             <span class="car-spec">${c.transmission === "automatic" ? "Auto" : "Manual"}</span>
@@ -237,6 +255,7 @@
         [
           "listingsSearch",
           "listingsDistrict",
+          "listingsVehicleType",
           "listingsMinPrice",
           "listingsMaxPrice",
           "listingsFuel",
@@ -263,6 +282,7 @@
           district: undefined,
           fuelType: undefined,
           transmission: undefined,
+          vehicleType: undefined,
           sort: "newest",
         };
         void load();

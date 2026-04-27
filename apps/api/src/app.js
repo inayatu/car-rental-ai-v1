@@ -10,11 +10,38 @@ const registerRoutes = require("./routes");
 
 const app = express();
 
-app.use(helmet());
+// API + SPA on different ports are still different origins. Helmet v7+ defaults to
+// Cross-Origin-Resource-Policy: same-origin, which blocks the frontend from using JSON responses.
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      const fromEnv = String(process.env.CORS_ORIGIN || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (fromEnv.length > 0) {
+        return callback(null, fromEnv.includes(origin));
+      }
+      if (env.nodeEnv === "development") {
+        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+          return callback(null, true);
+        }
+      }
+      // Production without CORS_ORIGIN: reflect the requesting origin (tighten via CORS_ORIGIN for deploy)
+      return callback(null, true);
+    },
     credentials: true,
+    optionsSuccessStatus: 204,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   })
 );
 app.use(cookieParser());

@@ -388,6 +388,19 @@
           </div>
         </div>
 
+        <div class="filter-section">
+          <div class="filter-section-title">Vehicle type</div>
+          <select class="form-select" id="listingsVehicleType" aria-label="Filter by vehicle type">
+            <option value="">All types</option>
+            <option value="suv_4wd">SUV / 4WD</option>
+            <option value="jeep">Jeep</option>
+            <option value="sedan">Sedan</option>
+            <option value="van_coaster">Van / Coaster</option>
+            <option value="pickup">Pickup</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
         <hr class="divider">
 
         <div class="filter-section">
@@ -487,6 +500,7 @@
         <div class="detail-gallery" id="detailGallery">🚙
           <div class="detail-gallery-badge"><span class="badge badge-green">✓ Verified Vehicle</span></div>
         </div>
+        <div id="detailThumbs" class="detail-thumbs" style="display:none;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem" aria-label="More photos"></div>
 
         <div class="mt-3">
           <div class="flex-between">
@@ -567,6 +581,27 @@
           <div class="form-group">
             <label class="form-label" for="detailBookEnd">Return Date</label>
             <input type="date" class="form-input" id="detailBookEnd" name="end" />
+          </div>
+          <h4 style="font-size:0.8rem;font-weight:700;margin:0.6rem 0 0.35rem;color:var(--ink3)">Renter details</h4>
+          <div class="form-group">
+            <label class="form-label" for="detailRenterName">Full name</label>
+            <input type="text" class="form-input" id="detailRenterName" name="renterName" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="detailRenterPhone">Phone</label>
+            <input type="tel" class="form-input" id="detailRenterPhone" name="renterPhone" autocomplete="tel" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="detailRenterEmail">Email</label>
+            <input type="email" class="form-input" id="detailRenterEmail" name="renterEmail" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="detailNumberOfPersons">Number of persons</label>
+            <input type="number" class="form-input" id="detailNumberOfPersons" name="numberOfPersons" min="1" max="50" value="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="detailRenterNotes">Notes (optional)</label>
+            <textarea class="form-input" id="detailRenterNotes" name="notes" rows="2" style="min-height:3.5rem;resize:vertical" placeholder="Pick-up time, special requests…"></textarea>
           </div>
           <p class="text-xs text-muted" style="margin:0 0 0.5rem">Return date is the day you bring the vehicle back. Estimates use daily rate × days.</p>
 
@@ -755,9 +790,11 @@
         <a class="sidebar-link"><span class="sidebar-link-icon">🚙</span>My Vehicles</a>
         <a class="sidebar-link" onclick="showPage('add-listing')"><span class="sidebar-link-icon">➕</span>Add New Vehicle</a>
         <div class="sidebar-section">Bookings</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">📬</span>Booking Requests<span class="sidebar-badge">2</span></a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">📅</span>Active Rentals</a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">✅</span>Completed</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📋</span>My bookings</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'upcoming'; void showPage('owner-bookings');"><span class="sidebar-link-icon">🗓️</span>Upcoming</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'active'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📅</span>Active</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'completed'; void showPage('owner-bookings');"><span class="sidebar-link-icon">✅</span>Completed</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'declined'; void showPage('owner-bookings');"><span class="sidebar-link-icon">⛔</span>Declined</a>
         <div class="sidebar-section">Earnings</div>
         <a class="sidebar-link"><span class="sidebar-link-icon">💰</span>Earnings Summary</a>
         <a class="sidebar-link"><span class="sidebar-link-icon">📊</span>Reports</a>
@@ -779,20 +816,17 @@
         <div class="stat-box"><div class="stat-val" id="ownerStatTrips">—</div><div class="stat-lbl">Trips Completed</div></div>
         <div class="stat-box"><div class="stat-val" id="ownerStatEarnings">—</div><div class="stat-lbl">Total Earnings</div></div>
       </div>
-
-      <!-- BOOKING REQUESTS -->
-      <div class="flex-between mb-2 mt-2">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700">Pending Requests</h2>
-        <span class="badge badge-amber" id="ownerPendingBadge">—</span>
+      <div class="mb-2" style="max-width:560px">
+        <p class="text-sm text-muted" style="margin:0.75rem 0 0.5rem">Renter requests and trip tabs: use <strong>My bookings</strong> in the side menu (matches the app).</p>
+        <button type="button" class="btn btn-forest btn-sm" onclick="window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');">My bookings</button>
+        <span class="badge badge-amber ml-1" id="ownerPendingBadge" style="margin-left:0.5rem">—</span>
       </div>
 
-      <div class="bookings-list mb-3" id="ownerBookingsPending">
-        <p class="text-sm text-muted">Loading…</p>
-      </div>
-
-      <!-- MY VEHICLES -->
-      <div class="flex-between mb-2">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700">My Vehicles</h2>
+      <!-- Vehicle listings -->
+      <section class="owner-dash-section" style="background:rgba(255,255,255,0.7); border:1px solid var(--border); border-top:3px solid var(--moss, #2d5a3d); border-radius:12px; padding:1.25rem 1.4rem; margin:1.5rem 0 1.25rem" aria-label="My vehicles">
+        <div class="text-xs" style="font-weight:700; letter-spacing:0.14em; color:var(--ink3); text-transform:uppercase; margin-bottom:0.75rem">Listings (vehicles)</div>
+        <div class="flex-between mb-2" style="align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+        <h2 style="font-family:var(--font-display);font-size:1.35rem;font-weight:700; margin:0">My vehicles</h2>
         <button class="btn btn-amber btn-sm" onclick="showPage('add-listing')">+ Add Vehicle</button>
       </div>
       <div class="my-cars-grid">
@@ -831,18 +865,60 @@
           </div>
         </div>
       </div>
+      </section>
+    </main>
+  </div>
+</div>
 
-      <!-- RECENT BOOKINGS TABLE -->
-      <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin:2rem 0 1rem">All Bookings</h2>
-      <div class="card table-wrap">
-        <table id="ownerBookingsTable">
-          <thead>
-            <tr><th>Renter</th><th>Vehicle</th><th>Dates</th><th>Days</th><th>Amount</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="6" class="text-sm text-muted">Loading…</td></tr>
-          </tbody>
-        </table>
+<!-- ══════════════════════════
+     PAGE: OWNER — MY BOOKINGS (tabs, matches apps/web)
+══════════════════════════ -->
+<div class="page" id="page-owner-bookings">
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" style="background:var(--moss)">IA</div>
+          <div><div class="sidebar-name">Imran Ali</div><div class="sidebar-role">Vehicle Owner</div></div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">Main</div>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">🏠</span>Dashboard</a>
+        <div class="sidebar-section">Vehicles</div>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">🚙</span>My Vehicles</a>
+        <a class="sidebar-link" onclick="showPage('add-listing')"><span class="sidebar-link-icon">➕</span>Add New Vehicle</a>
+        <div class="sidebar-section">Bookings</div>
+        <a class="sidebar-link active" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📋</span>My bookings</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'upcoming'; void showPage('owner-bookings');"><span class="sidebar-link-icon">🗓️</span>Upcoming</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'active'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📅</span>Active</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'completed'; void showPage('owner-bookings');"><span class="sidebar-link-icon">✅</span>Completed</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'declined'; void showPage('owner-bookings');"><span class="sidebar-link-icon">⛔</span>Declined</a>
+        <div class="sidebar-section">Earnings</div>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">💰</span>Earnings Summary</a>
+        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">📊</span>Reports</a>
+        <div class="sidebar-section">Account</div>
+        <a class="sidebar-link" onclick="showPage('auth')"><span class="sidebar-link-icon">👤</span>My Profile</a>
+        <a class="sidebar-link" onclick="showPage('home')"><span class="sidebar-link-icon">🚪</span>Logout</a>
+      </nav>
+    </aside>
+    <main class="dashboard-main">
+      <div class="flex-between" style="align-items:flex-start; flex-wrap:wrap; gap:1rem; margin-bottom:0.5rem">
+        <div>
+          <div class="dashboard-welcome">My bookings</div>
+          <p class="text-sm text-muted" style="max-width:560px; margin:0.35rem 0 0; line-height:1.5">Use tabs to match the React app: <strong>Pending</strong>, <strong>Upcoming</strong>, <strong>Active</strong>, <strong>Completed</strong>, <strong>Declined</strong>.</p>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="showPage('owner-dashboard')">← Dashboard</button>
+      </div>
+      <div class="mb-2" id="ownerBookingTabBar" style="display:flex; flex-wrap:wrap; gap:0.4rem; border-bottom:1px solid var(--border); padding:0.35rem 0 0.75rem">
+        <button type="button" class="btn btn-sm" style="min-height:2rem" data-owner-btab="pending" onclick="setOwnerBookingsTab('pending')">Pending</button>
+        <button type="button" class="btn btn-sm" data-owner-btab="upcoming" onclick="setOwnerBookingsTab('upcoming')">Upcoming</button>
+        <button type="button" class="btn btn-sm" data-owner-btab="active" onclick="setOwnerBookingsTab('active')">Active</button>
+        <button type="button" class="btn btn-sm" data-owner-btab="completed" onclick="setOwnerBookingsTab('completed')">Completed</button>
+        <button type="button" class="btn btn-sm" data-owner-btab="declined" onclick="setOwnerBookingsTab('declined')">Declined</button>
+      </div>
+      <div class="bookings-list" id="ownerBookingsTabbedList" aria-live="polite">
+        <p class="text-sm text-muted">Loading…</p>
       </div>
     </main>
   </div>
@@ -873,30 +949,25 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label class="form-label" for="addListingBrand">Make (brand)</label>
-              <select class="form-select" id="addListingBrand" name="brand" required>
-                <option value="">Select…</option>
-                <option>Toyota</option>
-                <option>Suzuki</option>
-                <option>Honda</option>
-                <option>Mitsubishi</option>
-                <option>Other</option>
-              </select>
+              <select class="form-select" id="addListingBrand" name="brand" required></select>
             </div>
             <div class="form-group"><label class="form-label" for="addListingModel">Model</label>
-              <input class="form-input" id="addListingModel" name="model" required placeholder="e.g. Prado, Hilux, Jimny" />
+              <select class="form-select" id="addListingModel" name="model" required></select>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group"><label class="form-label" for="addListingYear">Year</label>
               <input class="form-input" id="addListingYear" name="year" type="number" required min="1980" placeholder="2020" />
             </div>
-            <div class="form-group"><label class="form-label" for="addListingVehicleType">Vehicle type (for description)</label>
-              <select class="form-select" id="addListingVehicleType">
-                <option>SUV / 4WD</option>
-                <option>Jeep</option>
-                <option>Sedan</option>
-                <option>Van / Coaster</option>
-                <option>Pickup / Hilux</option>
+            <div class="form-group"><label class="form-label" for="addListingVehicleType">Vehicle type * <span class="text-xs" style="opacity:0.75">(used for search filters)</span></label>
+              <select class="form-select" id="addListingVehicleType" name="vehicleType" required>
+                <option value="">Select…</option>
+                <option value="suv_4wd">SUV / 4WD</option>
+                <option value="jeep">Jeep</option>
+                <option value="sedan">Sedan</option>
+                <option value="van_coaster">Van / Coaster</option>
+                <option value="pickup">Pickup</option>
+                <option value="other">Other</option>
               </select>
             </div>
           </div>
@@ -921,7 +992,7 @@
               </select>
             </div>
             <div class="form-group"><label class="form-label" for="addListingColor">Color (optional)</label>
-              <input class="form-input" id="addListingColor" name="color" placeholder="White" />
+              <select class="form-select" id="addListingColor" name="color"></select>
             </div>
           </div>
           <div class="form-group"><label class="form-label" for="addListingReg">Registration number</label>
@@ -965,8 +1036,9 @@
           <div class="form-section-title"><span class="form-section-icon">📸</span> Vehicle Photos</div>
           <p class="text-xs text-muted mb-2">At least one photo (JPEG, PNG, or WebP). Up to 10 images.</p>
           <div class="form-group">
-            <label class="form-label" for="addListingImages">Photos</label>
+            <label class="form-label" for="addListingImages">Photos (max 5)</label>
             <input type="file" id="addListingImages" accept="image/jpeg,image/png,image/webp" multiple />
+            <p class="text-xs text-muted" style="margin:0.35rem 0 0">Renters can view all photos on the vehicle page.</p>
           </div>
         </div>
 
@@ -1044,6 +1116,7 @@
 <script src="/js/listings.js" defer></script>
 <script src="/js/detail.js" defer></script>
 <script src="/js/bookings.js" defer></script>
+<script src="/js/vehicleOptions.js" defer></script>
 <script src="/js/addListing.js" defer></script>
 <script src="/js/app.js" defer></script>
 </body>

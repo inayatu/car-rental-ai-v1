@@ -59,6 +59,13 @@ const carSchema = new mongoose.Schema(
       enum: ["petrol", "diesel", "hybrid", "electric"],
       default: "petrol",
     },
+    /** For search filters: SUV, sedan, pickup, etc. */
+    vehicleType: {
+      type: String,
+      enum: ["suv_4wd", "jeep", "sedan", "van_coaster", "pickup", "other"],
+      default: "other",
+      index: true,
+    },
     basePricePerDay: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "PKR", trim: true, uppercase: true },
     location: {
@@ -71,6 +78,13 @@ const carSchema = new mongoose.Schema(
       default: "draft",
       index: true,
     },
+    /** Soft delete: when true, listing is hidden from owner "active" list and from public search. */
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: { type: Date, default: null },
     description: { type: String, trim: true },
     images: [{ type: String }],
     documents: [carDocumentSchema],

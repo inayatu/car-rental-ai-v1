@@ -89,6 +89,7 @@ function buildCreatePayload(body, uploadData) {
     seats: parseNumber(body.seats),
     transmission: body.transmission,
     fuelType: body.fuelType,
+    vehicleType: body.vehicleType,
     basePricePerDay: parseNumber(body.basePricePerDay),
     currency: body.currency,
     location: parseLocation(body),
@@ -111,6 +112,7 @@ function buildUpdatePayload(body, uploadData) {
   if (body.seats !== undefined) payload.seats = parseNumber(body.seats);
   if (body.transmission !== undefined) payload.transmission = body.transmission;
   if (body.fuelType !== undefined) payload.fuelType = body.fuelType;
+  if (body.vehicleType !== undefined) payload.vehicleType = body.vehicleType;
   if (body.basePricePerDay !== undefined) payload.basePricePerDay = parseNumber(body.basePricePerDay);
   if (body.currency !== undefined) payload.currency = body.currency;
   if (body.status !== undefined) payload.status = body.status;
@@ -144,11 +146,12 @@ function sanitizePublicCar(car) {
     seats: car.seats,
     fuelType: car.fuelType,
     transmission: car.transmission,
+    vehicleType: car.vehicleType || "other",
     basePricePerDay: car.basePricePerDay,
     currency: car.currency,
     location: car.location,
     description: car.description,
-    images: car.images,
+    images: Array.isArray(car.images) ? car.images.slice(0, 5) : car.images,
     ownerName,
     verification: { verifiedBadge: car.verification?.verifiedBadge },
   };
@@ -167,6 +170,7 @@ function sanitizeCar(car) {
     seats: car.seats,
     transmission: car.transmission,
     fuelType: car.fuelType,
+    vehicleType: car.vehicleType || "other",
     basePricePerDay: car.basePricePerDay,
     currency: car.currency,
     location: car.location,
@@ -178,6 +182,8 @@ function sanitizeCar(car) {
     moderationHistory: car.moderationHistory,
     createdAt: car.createdAt,
     updatedAt: car.updatedAt,
+    isDeleted: car.isDeleted,
+    deletedAt: car.deletedAt,
   };
 }
 
@@ -221,7 +227,8 @@ async function createCar(req, res, next) {
 
 async function listMyCars(req, res, next) {
   try {
-    const cars = await carService.listOwnerCars(req.user.sub);
+    const includeDeleted = String(req.query?.includeDeleted || "") === "1" || String(req.query?.includeDeleted) === "true";
+    const cars = await carService.listOwnerCars(req.user.sub, { includeDeleted });
     return res.status(200).json({ cars: cars.map(sanitizeCar) });
   } catch (error) {
     return next(error);
@@ -254,7 +261,17 @@ async function deleteMyCar(req, res, next) {
   try {
     const { id } = carIdParamsSchema.parse(req.params);
     const result = await carService.deleteOwnerCar(req.user.sub, id);
-    return res.status(200).json(result);
+    return res.status(200).json({ success: result.success, soft: true, car: sanitizeCar(result.car) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function restoreMyCar(req, res, next) {
+  try {
+    const { id } = carIdParamsSchema.parse(req.params);
+    const car = await carService.restoreOwnerCar(req.user.sub, id);
+    return res.status(200).json({ car: sanitizeCar(car) });
   } catch (error) {
     return next(error);
   }
@@ -328,6 +345,7 @@ module.exports = {
   getMyCarById,
   updateMyCar,
   deleteMyCar,
+  restoreMyCar,
   listPendingModeration,
   verifyCar,
   unverifyCar,

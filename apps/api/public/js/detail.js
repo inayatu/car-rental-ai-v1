@@ -53,16 +53,55 @@
 
   function setGallery(imgs) {
     const g = el("detailGallery");
+    const thumbRow = el("detailThumbs");
     if (!g) return;
-    const first = Array.isArray(imgs) && imgs[0] ? imgs[0] : null;
+    const list = Array.isArray(imgs) ? imgs.filter(Boolean).slice(0, 5) : [];
     g.style.backgroundSize = "cover";
     g.style.backgroundPosition = "center";
-    if (first) {
-      g.style.backgroundImage = `url('${String(first).replace(/'/g, "%27")}')`;
+    if (list[0]) {
+      g.style.backgroundImage = `url('${String(list[0]).replace(/'/g, "%27")}')`;
       g.textContent = "";
     } else {
       g.style.backgroundImage = "none";
       g.textContent = g.textContent.trim() ? g.textContent : "🚙";
+    }
+    if (thumbRow) {
+      thumbRow.innerHTML = "";
+      if (list.length <= 1) {
+        thumbRow.style.display = "none";
+      } else {
+        thumbRow.style.display = "flex";
+        const go = (u) => {
+          if (g) {
+            g.style.backgroundImage = `url('${String(u).replace(/'/g, "%27")}')`;
+            g.textContent = "";
+          }
+        };
+        list.forEach((u) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.setAttribute("aria-label", "Show photo");
+          b.style.width = "64px";
+          b.style.height = "64px";
+          b.style.borderRadius = "8px";
+          b.style.border = "2px solid var(--border)";
+          b.style.padding = "0";
+          b.style.cursor = "pointer";
+          b.style.backgroundSize = "cover";
+          b.style.backgroundPosition = "center";
+          b.style.backgroundImage = `url('${String(u).replace(/'/g, "%27")}')`;
+          b.addEventListener("click", () => {
+            go(u);
+            thumbRow.querySelectorAll("button").forEach((x) => {
+              x.style.borderColor = "var(--border)";
+            });
+            b.style.borderColor = "var(--moss, #2d5a3d)";
+          });
+          thumbRow.appendChild(b);
+        });
+        const firstBtn = thumbRow.querySelector("button");
+        if (firstBtn) firstBtn.style.borderColor = "var(--moss, #2d5a3d)";
+      }
     }
   }
 
@@ -201,6 +240,15 @@
       msg.style.color = "";
     }
     wireCalc(car);
+    const uP = getUser();
+    if (uP) {
+      const rn = el("detailRenterName");
+      const rp = el("detailRenterPhone");
+      const re = el("detailRenterEmail");
+      if (rn && !rn.value) rn.value = uP.name || "";
+      if (rp && !rp.value) rp.value = uP.phone || "";
+      if (re && !re.value) re.value = uP.email || "";
+    }
     const form = el("detailBookForm");
     if (form) {
       form.onsubmit = async (ev) => {
@@ -251,16 +299,36 @@
           }
           return;
         }
+        const rName = (el("detailRenterName") && el("detailRenterName").value && el("detailRenterName").value.trim()) || "";
+        const rPhone = (el("detailRenterPhone") && el("detailRenterPhone").value && el("detailRenterPhone").value.trim()) || "";
+        const rEmail = (el("detailRenterEmail") && el("detailRenterEmail").value && el("detailRenterEmail").value.trim()) || "";
+        const nRaw = el("detailNumberOfPersons") && el("detailNumberOfPersons").value;
+        const nPersons = Math.min(50, Math.max(1, parseInt(String(nRaw), 10) || 1));
+        if (!rName || !rPhone || !rEmail) {
+          if (msg) {
+            msg.textContent = "Please enter your name, phone, and email.";
+            msg.style.color = "#c43c3c";
+            msg.style.display = "block";
+          }
+          return;
+        }
+        const rNotes = el("detailRenterNotes") && el("detailRenterNotes").value && el("detailRenterNotes").value.trim();
         const btn = el("detailBookBtn");
         if (btn) btn.disabled = true;
         try {
+          const payload = {
+            carId: String(carData.id),
+            startDate: startIso,
+            endDate: endIso,
+            renterName: rName,
+            numberOfPersons: nPersons,
+            renterPhone: rPhone,
+            renterEmail: rEmail,
+          };
+          if (rNotes) payload.notes = rNotes;
           await window.GBApi.apiJson(BOOKINGS, {
             method: "POST",
-            body: JSON.stringify({
-              carId: String(carData.id),
-              startDate: startIso,
-              endDate: endIso,
-            }),
+            body: JSON.stringify(payload),
           });
           if (msg) {
             msg.textContent = "Booking requested. The owner will respond soon.";

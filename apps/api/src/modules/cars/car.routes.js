@@ -12,7 +12,7 @@ router.post(
   "/",
   requireAuth(["owner"]),
   uploadSingle.fields([
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: 5 },
     { name: "documents", maxCount: 10 },
   ]),
   carController.createCar
@@ -32,11 +32,12 @@ router.patch(
   "/:id",
   requireAuth(["owner"]),
   uploadSingle.fields([
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: 5 },
     { name: "documents", maxCount: 10 },
   ]),
   carController.updateMyCar
 );
+router.post("/:id/restore", requireAuth(["owner"]), carController.restoreMyCar);
 router.delete("/:id", requireAuth(["owner"]), carController.deleteMyCar);
 
 module.exports = router;
