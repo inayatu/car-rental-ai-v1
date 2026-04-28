@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../lib/apiClient.js";
-import { clearStoredTokens, getStoredTokens, setStoredAccessToken, setStoredTokens } from "../lib/authStorage.js";
+import { clearStoredTokens, getStoredTokens, setStoredTokens } from "../lib/authStorage.js";
 
 const AuthContext = createContext(null);
 
@@ -17,15 +17,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState("loading");
 
+  const tryRefresh = useCallback(async () => {
+    const { refreshToken } = getStoredTokens();
+    const payload = refreshToken ? { refreshToken } : {};
+    const { data } = await api.post("/auth/refresh", payload);
+    if (data?.accessToken) {
+      setStoredTokens(data.accessToken, data.refreshToken || refreshToken);
+      return true;
+    }
+    return false;
+  }, []);
+
   const loadSession = useCallback(async () => {
     setStatus("loading");
-    const { accessToken, refreshToken } = getStoredTokens();
-    if (!accessToken && !refreshToken) {
-      setUser(null);
-      setStatus("ready");
-      return;
-    }
-
     try {
       const me = await api.get("/auth/me");
       if (me.data?.user) {
@@ -33,31 +37,20 @@ export function AuthProvider({ children }) {
         setStatus("ready");
         return;
       }
-      if (refreshToken) {
-        const { data: tok } = await api.post("/auth/refresh", { refreshToken });
-        if (tok?.accessToken) {
-          setStoredTokens(tok.accessToken, tok.refreshToken || refreshToken);
-          const me2 = await api.get("/auth/me");
-          setUser(me2.data?.user || null);
-        } else {
-          setUser(null);
-        }
+      const refreshed = await tryRefresh().catch(() => false);
+      if (refreshed) {
+        const me2 = await api.get("/auth/me");
+        setUser(me2.data?.user || null);
       } else {
         setUser(null);
+        clearStoredTokens();
       }
     } catch {
-      if (refreshToken) {
+      const refreshed = await tryRefresh().catch(() => false);
+      if (refreshed) {
         try {
-          const { data: tok } = await api.post("/auth/refresh", { refreshToken });
-          if (tok?.accessToken) {
-            setStoredTokens(tok.accessToken, tok.refreshToken || refreshToken);
-            setStoredAccessToken(tok.accessToken);
-            const me3 = await api.get("/auth/me");
-            setUser(me3.data?.user || null);
-          } else {
-            setUser(null);
-            clearStoredTokens();
-          }
+          const me3 = await api.get("/auth/me");
+          setUser(me3.data?.user || null);
         } catch {
           setUser(null);
           clearStoredTokens();
@@ -69,7 +62,7 @@ export function AuthProvider({ children }) {
     } finally {
       setStatus("ready");
     }
-  }, []);
+  }, [tryRefresh]);
 
   useEffect(() => {
     loadSession();

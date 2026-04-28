@@ -1,3 +1,0 @@
-/* Import order: design tokens, then all layout + page rules */
-@import url("./variables.css");
-@import url("./app.css");

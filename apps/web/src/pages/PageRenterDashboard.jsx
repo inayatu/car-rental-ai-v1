@@ -5,6 +5,7 @@ import { StatBox } from "../components/ui/StatBox.jsx";
 import { Alert } from "../components/ui/Alert.jsx";
 import { Sidebar } from "../components/layout/Sidebar.jsx";
 import { RenterBookingCard } from "../components/renter/RenterBookingCard.jsx";
+import { Pagination } from "../components/ui/Pagination.jsx";
 import { api } from "../lib/apiClient.js";
 import { PATH } from "../lib/paths.js";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
@@ -17,11 +18,14 @@ const TABS = [
   { id: "completed", label: "Completed" },
   { id: "declined", label: "Declined" },
 ];
+const PAGE_SIZE = 8;
 
 export function PageRenterDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseRenterBookingTab(searchParams.get("tab"));
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
   const [bookings, setBookings] = useState([]);
   const [err, setErr] = useState(null);
   const [actionErr, setActionErr] = useState(null);
@@ -54,6 +58,14 @@ export function PageRenterDashboard() {
     }
   };
 
+  const setPage = (nextPage) => {
+    const next = Math.max(1, nextPage);
+    const params = new URLSearchParams();
+    if (tab !== "all") params.set("tab", tab);
+    if (next > 1) params.set("page", String(next));
+    setSearchParams(params);
+  };
+
   const runCancel = async (id) => {
     if (typeof window !== "undefined" && !window.confirm("Cancel this booking request?")) return;
     setActionErr(null);
@@ -72,6 +84,12 @@ export function PageRenterDashboard() {
   };
 
   const filtered = useMemo(() => bookings.filter((b) => renterBookingInTab(b, tab)), [bookings, tab]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
 
   const total = bookings.length;
   const active = bookings.filter((b) => ["requested", "accepted"].includes(b.status)).length;
@@ -183,7 +201,7 @@ export function PageRenterDashboard() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
           {!loading && filtered.length === 0 && <p style={{ color: "var(--ink3)" }}>No bookings in this list.</p>}
           {!loading &&
-            filtered.map((b) => (
+            paged.map((b) => (
               <RenterBookingCard
                 key={b.id}
                 booking={b}
@@ -193,6 +211,9 @@ export function PageRenterDashboard() {
               />
             ))}
         </div>
+        {!loading && filtered.length > 0 ? (
+          <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+        ) : null}
       </main>
     </div>
   );

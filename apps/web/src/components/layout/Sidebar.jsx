@@ -272,10 +272,12 @@ export function Sidebar({ role = "renter" }) {
           width: 240,
           background: "var(--slate2)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
+          alignSelf: "flex-start",
           position: "sticky",
           top: 64,
-          height: "calc(100vh - 64px)",
-          overflow: "hidden",
+          maxHeight: "calc(100vh - 64px)",
+          overflow: "auto",
+          overscrollBehavior: "contain",
         }}
       >
         <SidebarContent />

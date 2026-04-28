@@ -3,12 +3,14 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const requestLogger = require("./middlewares/request-logger.middleware");
+const { globalApiLimiter } = require("./middlewares/rate-limit.middleware");
 const logger = require("./utils/logger");
 const connectDB = require("./config/db");
 const env = require("./config/env");
 const registerRoutes = require("./routes");
 
 const app = express();
+app.set("trust proxy", 1);
 
 // API + SPA on different ports are still different origins. Helmet v7+ defaults to
 // Cross-Origin-Resource-Policy: same-origin, which blocks the frontend from using JSON responses.
@@ -46,6 +48,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+app.use("/api/v1", globalApiLimiter);
 app.use(requestLogger);
 
 registerRoutes(app);

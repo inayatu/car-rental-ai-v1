@@ -1,1123 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GB Trails — Gilgit Baltistan Car Rental & Tourism</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/main.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 Forbidden | GB Trails API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #05070f;
+      font-family: "Outfit", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #e7ecff;
+    }
+    .forbidden {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(67, 56, 202, 0.55), transparent 42%),
+        radial-gradient(circle at 90% 15%, rgba(220, 38, 38, 0.45), transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(14, 165, 233, 0.3), transparent 48%),
+        #05070f;
+    }
+    .forbidden::before,
+    .forbidden::after {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      z-index: -1;
+      filter: blur(44px);
+      opacity: 0.6;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+    .forbidden::before {
+      background: conic-gradient(from 0deg, rgba(99, 102, 241, 0.6), rgba(244, 63, 94, 0.55), rgba(6, 182, 212, 0.55), rgba(99, 102, 241, 0.6));
+    }
+    .forbidden::after {
+      animation-duration: 18s;
+      animation-direction: alternate-reverse;
+      background: conic-gradient(from 180deg, rgba(2, 132, 199, 0.45), rgba(168, 85, 247, 0.5), rgba(248, 113, 113, 0.45), rgba(2, 132, 199, 0.45));
+    }
+    .card {
+      width: min(92vw, 720px);
+      border-radius: 24px;
+      padding: clamp(1.2rem, 4vw, 2.2rem);
+      text-align: center;
+      background: linear-gradient(155deg, rgba(12, 17, 34, 0.92), rgba(20, 21, 40, 0.78));
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 24px 75px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(10px);
+    }
+    .lock {
+      font-size: clamp(2.6rem, 8vw, 4rem);
+      line-height: 1;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    .code {
+      margin: 0;
+      color: #fda4af;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      font-size: clamp(0.75rem, 2.6vw, 0.9rem);
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0.55rem 0 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(2rem, 9vw, 4.2rem);
+      line-height: 0.95;
+      letter-spacing: 0.01em;
+      color: #ffffff;
+    }
+    p {
+      margin: 0.85rem auto 0;
+      max-width: 52ch;
+      color: rgba(224, 231, 255, 0.86);
+      font-size: clamp(0.9rem, 3.4vw, 1.05rem);
+      line-height: 1.6;
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 1.25rem;
+    }
+    .btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.6rem;
+      padding: 0.55rem 0.95rem;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.28);
+      color: #fde68a;
+      font-weight: 600;
+      font-size: 0.92rem;
+      background: rgba(250, 204, 21, 0.08);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .btn.secondary {
+      color: #c7d2fe;
+      border-color: rgba(199, 210, 254, 0.26);
+      background: rgba(199, 210, 254, 0.08);
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(250, 204, 21, 0.16);
+    }
+    .btn.secondary:hover {
+      background: rgba(199, 210, 254, 0.16);
+    }
+    .noise {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.085) 0.7px, transparent 0.7px);
+      background-size: 3px 3px;
+      opacity: 0.14;
+      mix-blend-mode: soft-light;
+      animation: grain 240ms steps(4) infinite;
+    }
+    @keyframes drift {
+      from { transform: translate3d(-2%, -1%, 0) scale(1); }
+      to { transform: translate3d(2%, 1.5%, 0) scale(1.05); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(239, 68, 68, 0)); }
+      50% { transform: translateY(-2px) scale(1.06); filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.45)); }
+    }
+    @keyframes grain {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(1px, -1px); }
+      50% { transform: translate(-1px, 1px); }
+      75% { transform: translate(1px, 1px); }
+      100% { transform: translate(0, 0); }
+    }
+  </style>
 </head>
 <body>
-
-<div id="include-nav-drawer"></div>
-<div id="include-global-nav"></div>
-
-<!-- ══════════════════════════
-     PAGE: HOME
-══════════════════════════ -->
-<div class="page active" id="page-home">
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-overlay"></div>
-    <div class="hero-pattern"></div>
-    <div class="hero-content">
-      <div>
-        <div class="hero-eyebrow">Gilgit Baltistan Tourism</div>
-        <h1 class="hero-title">Explore the<br><em>Karakoram</em><br>on your terms</h1>
-        <p class="hero-subtitle">Verified cars, jeeps, and SUVs from trusted local owners. From Hunza to Skardu — adventure starts here.</p>
-        <div style="display:flex;gap:1rem;flex-wrap:wrap">
-          <button class="btn btn-amber btn-lg" onclick="showPage('listings')">Browse Cars →</button>
-          <button class="btn btn-outline-white btn-lg" onclick="showPage('auth')">List Your Car</button>
-        </div>
-        <div class="hero-stats">
-          <div class="hero-stat"><div class="hero-stat-num">120+</div><div class="hero-stat-lbl">Verified Vehicles</div></div>
-          <div class="hero-stat"><div class="hero-stat-num">14</div><div class="hero-stat-lbl">Destinations</div></div>
-          <div class="hero-stat"><div class="hero-stat-num">4.9★</div><div class="hero-stat-lbl">Avg. Rating</div></div>
-        </div>
+  <main class="forbidden" role="main" aria-live="polite">
+    <section class="card" aria-label="Forbidden access">
+      <div class="lock" aria-hidden="true">🔒</div>
+      <p class="code">Error 403</p>
+      <h1>Forbidden</h1>
+      <p>
+        This endpoint is reserved for authenticated API access. Direct browser access is blocked.
+      </p>
+      <div class="actions">
+        <a class="btn" href="/api/docs">Open API Docs</a>
+        <a class="btn secondary" href="/health">Check Health</a>
       </div>
-      <div>
-        <!-- Quick Search -->
-        <div class="hero-search">
-          <div class="hero-search-title">🔍 Quick Search</div>
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.5)">Destination</label>
-            <select class="form-select">
-              <option>Hunza Valley</option>
-              <option>Skardu</option>
-              <option>Gilgit City</option>
-              <option>Naran Kaghan</option>
-              <option>Fairy Meadows</option>
-              <option>Deosai Plains</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" style="color:rgba(255,255,255,0.5)">Pick-up Date</label>
-              <input type="date" class="form-input">
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="color:rgba(255,255,255,0.5)">Return Date</label>
-              <input type="date" class="form-input">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.5)">Vehicle Type</label>
-            <select class="form-select">
-              <option>Any Type</option>
-              <option>🚙 SUV / 4WD</option>
-              <option>🚐 Jeep</option>
-              <option>🚗 Sedan</option>
-              <option>🚌 Coaster / Van</option>
-            </select>
-          </div>
-          <button class="btn btn-amber btn-block" onclick="showPage('listings')">Search Available Cars →</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DESTINATIONS TICKER -->
-  <div class="destinations-strip">
-    <div class="destinations-scroll" id="destScroll">
-      <span class="dest-tag">Hunza Valley</span>
-      <span class="dest-tag">Skardu</span>
-      <span class="dest-tag">Gilgit City</span>
-      <span class="dest-tag">Fairy Meadows</span>
-      <span class="dest-tag">Deosai Plains</span>
-      <span class="dest-tag">K2 Base Camp</span>
-      <span class="dest-tag">Naltar Valley</span>
-      <span class="dest-tag">Shigar</span>
-      <span class="dest-tag">Passu</span>
-      <span class="dest-tag">Khaplu</span>
-      <span class="dest-tag">Naran</span>
-      <span class="dest-tag">Babusar Top</span>
-      <!-- Duplicate for seamless loop -->
-      <span class="dest-tag">Hunza Valley</span>
-      <span class="dest-tag">Skardu</span>
-      <span class="dest-tag">Gilgit City</span>
-      <span class="dest-tag">Fairy Meadows</span>
-      <span class="dest-tag">Deosai Plains</span>
-      <span class="dest-tag">K2 Base Camp</span>
-    </div>
-  </div>
-
-  <!-- WHY US -->
-  <section class="why-section">
-    <div class="wrap">
-      <div class="eyebrow">Why GB Trails</div>
-      <h2 class="section-title">Travel smarter,<br><em>safer, and further</em></h2>
-      <div class="why-grid">
-        <div class="why-card">
-          <div class="why-icon">✅</div>
-          <div class="why-title">Government Verified</div>
-          <div class="why-desc">Every vehicle and owner is verified against national databases before listing. No unregistered vehicles, no surprises.</div>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">📍</div>
-          <div class="why-title">Local Experts</div>
-          <div class="why-desc">Owners are locals who know these roads. They'll advise on routes, conditions, and hidden gems you won't find in guides.</div>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">📱</div>
-          <div class="why-title">Instant Booking</div>
-          <div class="why-desc">Request a booking online and get owner confirmation via SMS and email. Reserve your vehicle in minutes.</div>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">🛡</div>
-          <div class="why-title">Booking Records</div>
-          <div class="why-desc">Every booking is recorded and tracked. Full transparency for both renters and owners throughout the journey.</div>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">💰</div>
-          <div class="why-title">Fair Pricing</div>
-          <div class="why-desc">No hidden platform markups. Prices are set by owners. Pay directly and negotiate any extras face-to-face.</div>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">🏔</div>
-          <div class="why-title">Terrain-Ready Fleet</div>
-          <div class="why-desc">From jeeps built for K2 trails to comfortable SUVs for Hunza — every vehicle type covered for GB's diverse terrain.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="how-section">
-    <div class="wrap">
-      <div class="eyebrow">Process</div>
-      <h2 class="section-title">Book in <em>four steps</em></h2>
-      <div class="how-grid">
-        <div class="how-step">
-          <div class="how-num">1</div>
-          <div class="how-title">Browse & Filter</div>
-          <div class="how-desc">Find vehicles by destination, dates, type, and budget. All listings are verified.</div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">2</div>
-          <div class="how-title">Send Request</div>
-          <div class="how-desc">Submit your booking request with travel details. Owner gets an instant SMS notification.</div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">3</div>
-          <div class="how-title">Owner Confirms</div>
-          <div class="how-desc">Owner accepts or declines within 12 hours. You receive confirmation via email and SMS.</div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">4</div>
-          <div class="how-title">Hit the Road</div>
-          <div class="how-desc">Meet the owner, settle payment directly, and begin your GB adventure.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURED CARS -->
-  <section class="cars-section">
-    <div class="wrap">
-      <div class="flex-between mb-3">
-        <div>
-          <div class="eyebrow">Featured Vehicles</div>
-          <h2 class="section-title">Top-rated <em>rentals</em></h2>
-        </div>
-        <button class="btn btn-outline" onclick="showPage('listings')">View All Cars →</button>
-      </div>
-      <div class="cars-grid">
-        <div class="car-card" onclick="showPage('detail')">
-          <div class="car-img">🚙
-            <div class="car-img-overlay">
-              <span class="car-price-badge">PKR 8,000/day</span>
-              <span class="badge badge-green">Available</span>
-            </div>
-          </div>
-          <div class="car-body">
-            <div class="car-name">Toyota Prado 2020</div>
-            <div class="car-loc">📍 Hunza Valley</div>
-            <div class="car-specs">
-              <span class="car-spec">⛽ Diesel</span>
-              <span class="car-spec">👥 7 Seats</span>
-              <span class="car-spec">🔧 4WD</span>
-              <span class="car-spec">❄ A/C</span>
-            </div>
-            <div class="stars">★★★★★</div>
-          </div>
-          <div class="car-footer">
-            <div class="car-rate">PKR 8,000 <span>/day</span></div>
-            <button class="btn btn-amber btn-sm">Book Now</button>
-          </div>
-        </div>
-        <div class="car-card" onclick="showPage('detail')">
-          <div class="car-img">🚐
-            <div class="car-img-overlay">
-              <span class="car-price-badge">PKR 5,500/day</span>
-              <span class="badge badge-green">Available</span>
-            </div>
-          </div>
-          <div class="car-body">
-            <div class="car-name">Suzuki Jimny 2021</div>
-            <div class="car-loc">📍 Skardu</div>
-            <div class="car-specs">
-              <span class="car-spec">⛽ Petrol</span>
-              <span class="car-spec">👥 4 Seats</span>
-              <span class="car-spec">🔧 4WD</span>
-              <span class="car-spec">🏔 Off-road</span>
-            </div>
-            <div class="stars">★★★★★</div>
-          </div>
-          <div class="car-footer">
-            <div class="car-rate">PKR 5,500 <span>/day</span></div>
-            <button class="btn btn-amber btn-sm">Book Now</button>
-          </div>
-        </div>
-        <div class="car-card" onclick="showPage('detail')">
-          <div class="car-img">🚌
-            <div class="car-img-overlay">
-              <span class="car-price-badge">PKR 12,000/day</span>
-              <span class="badge badge-amber">2 Left</span>
-            </div>
-          </div>
-          <div class="car-body">
-            <div class="car-name">Toyota Coaster 2019</div>
-            <div class="car-loc">📍 Gilgit City</div>
-            <div class="car-specs">
-              <span class="car-spec">⛽ Diesel</span>
-              <span class="car-spec">👥 22 Seats</span>
-              <span class="car-spec">🌍 Group</span>
-              <span class="car-spec">❄ A/C</span>
-            </div>
-            <div class="stars">★★★★☆</div>
-          </div>
-          <div class="car-footer">
-            <div class="car-rate">PKR 12,000 <span>/day</span></div>
-            <button class="btn btn-amber btn-sm">Book Now</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DESTINATIONS -->
-  <section class="dest-section">
-    <div class="wrap">
-      <div class="eyebrow">Explore</div>
-      <h2 class="section-title">Popular <em>destinations</em></h2>
-      <div class="dest-grid mt-4">
-        <div class="dest-card dest-card-big">
-          <div class="dest-emoji">🏔</div>
-          <div class="dest-overlay"></div>
-          <div class="dest-info">
-            <div class="dest-name">Hunza Valley</div>
-            <div class="dest-count">38 vehicles available</div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:1.5rem">
-          <div class="dest-card">
-            <div class="dest-emoji">⛺</div>
-            <div class="dest-overlay"></div>
-            <div class="dest-info">
-              <div class="dest-name">Fairy Meadows</div>
-              <div class="dest-count">12 vehicles available</div>
-            </div>
-          </div>
-          <div class="dest-card">
-            <div class="dest-emoji">🏕</div>
-            <div class="dest-overlay"></div>
-            <div class="dest-info">
-              <div class="dest-name">Skardu</div>
-              <div class="dest-count">27 vehicles available</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TESTIMONIALS -->
-  <section class="testi-section">
-    <div class="wrap">
-      <div class="eyebrow">Reviews</div>
-      <h2 class="section-title">Trusted by <em>travellers</em></h2>
-      <div class="testi-grid mt-4">
-        <div class="testi-card">
-          <div class="stars">★★★★★</div>
-          <div class="testi-text mt-2">"Booked a Prado for Hunza in minutes. The owner met us at the hotel and the vehicle was immaculate. Fully worth it for the mountain roads."</div>
-          <div class="testi-author">
-            <div class="testi-avatar">AK</div>
-            <div><div class="testi-name">Ali Khan</div><div class="testi-loc">Lahore · July 2024</div></div>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="stars">★★★★★</div>
-          <div class="testi-text mt-2">"Rented a Jimny for Deosai Plains. The owner knew every track and gave us a detailed route briefing. GB Trails made it effortless."</div>
-          <div class="testi-author">
-            <div class="testi-avatar">SB</div>
-            <div><div class="testi-name">Sara Baig</div><div class="testi-loc">Islamabad · August 2024</div></div>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="stars">★★★★★</div>
-          <div class="testi-text mt-2">"As a group of 12, we needed a Coaster. Found one same-day, owner was professional and the confirmation SMS came within 2 hours."</div>
-          <div class="testi-author">
-            <div class="testi-avatar">MR</div>
-            <div><div class="testi-name">M. Raza</div><div class="testi-loc">Karachi · Sept 2024</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="cta-section">
-    <div class="wrap cta-inner">
-      <div class="cta-title">Own a vehicle? Start earning today.</div>
-      <div class="cta-sub">List your car or jeep on GB Trails and connect with thousands of tourists every season.</div>
-      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-white btn-lg" onclick="showPage('auth')">List My Vehicle →</button>
-        <button class="btn btn-outline-inv btn-lg">Learn How It Works</button>
-      </div>
-    </div>
-  </section>
-
-  <div id="include-home-footer"></div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: CAR LISTINGS
-══════════════════════════ -->
-<div class="page" id="page-listings">
-  <div class="listing-hero" style="padding-top:100px">
-    <div class="wrap">
-      <div class="eyebrow" style="color:var(--amber2)">Browse Vehicles</div>
-      <div class="listing-hero-title">Available Cars in Gilgit Baltistan</div>
-      <div class="listing-hero-sub" id="listingsHeroSub">Loading listings…</div>
-    </div>
-  </div>
-
-  <div class="wrap">
-    <button class="btn btn-outline filter-toggle mt-2" onclick="toggleFilter()">⚙ Filters</button>
-    <div class="listing-layout">
-
-      <!-- SIDEBAR -->
-      <aside class="filter-sidebar" id="filterSidebar">
-        <div class="filter-title">
-          Filters
-          <span class="filter-clear" id="listingsClear" style="cursor:pointer">Clear all</span>
-        </div>
-
-        <div class="filter-section">
-          <div class="filter-section-title">Search</div>
-          <div class="form-group">
-            <input type="search" class="form-input" id="listingsSearch" placeholder="Brand, model, title…" autocomplete="off" />
-          </div>
-        </div>
-
-        <hr class="divider">
-
-        <div class="filter-section">
-          <div class="filter-section-title">District / area</div>
-          <div class="form-group">
-            <input type="text" class="form-input" id="listingsDistrict" placeholder="e.g. Hunza, Skardu" list="listingsDistrictList" />
-            <datalist id="listingsDistrictList">
-              <option value="Hunza"></option>
-              <option value="Skardu"></option>
-              <option value="Gilgit"></option>
-              <option value="Naran"></option>
-            </datalist>
-          </div>
-        </div>
-
-        <div class="filter-section">
-          <div class="filter-section-title">Vehicle type</div>
-          <select class="form-select" id="listingsVehicleType" aria-label="Filter by vehicle type">
-            <option value="">All types</option>
-            <option value="suv_4wd">SUV / 4WD</option>
-            <option value="jeep">Jeep</option>
-            <option value="sedan">Sedan</option>
-            <option value="van_coaster">Van / Coaster</option>
-            <option value="pickup">Pickup</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        <hr class="divider">
-
-        <div class="filter-section">
-          <div class="filter-section-title">Price per day (PKR)</div>
-          <div class="form-group">
-            <label class="form-label text-xs">Min</label>
-            <input type="number" class="form-input" id="listingsMinPrice" min="0" step="100" placeholder="Any" />
-          </div>
-          <div class="form-group">
-            <label class="form-label text-xs">Max (optional)</label>
-            <input type="number" class="form-input" id="listingsMaxPrice" min="0" step="100" placeholder="Any" />
-          </div>
-          <input
-            type="range"
-            id="listingsMaxPriceRange"
-            min="2000"
-            max="50000"
-            value="25000"
-            style="width: 100%; accent-color: var(--moss)"
-          />
-          <div class="range-display text-xs" style="margin-top: 6px">
-            <span>Up to <span id="listingsMaxPriceVal">25,000</span> PKR / day (use with Apply)</span>
-          </div>
-        </div>
-
-        <hr class="divider">
-
-        <div class="filter-section">
-          <div class="filter-section-title">Fuel</div>
-          <select class="form-select" id="listingsFuel">
-            <option value="">Any</option>
-            <option value="petrol">Petrol</option>
-            <option value="diesel">Diesel</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="electric">Electric</option>
-          </select>
-        </div>
-
-        <div class="filter-section">
-          <div class="filter-section-title">Transmission</div>
-          <select class="form-select" id="listingsTrans">
-            <option value="">Any</option>
-            <option value="manual">Manual</option>
-            <option value="automatic">Automatic</option>
-          </select>
-        </div>
-
-        <button type="button" class="btn btn-forest btn-block mt-2" id="listingsApply">Apply filters</button>
-        <button class="btn btn-outline btn-block mt-1" style="display:none" onclick="toggleFilter()" id="filterCloseBtn">Close</button>
-      </aside>
-
-      <!-- LISTINGS -->
-      <div>
-        <div class="listings-header">
-          <div class="listings-count" id="listingsCount"><strong>0</strong> vehicles found</div>
-          <select class="sort-select" id="listingsSort" aria-label="Sort listings">
-            <option value="newest">Newest first</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-          </select>
-        </div>
-
-        <div class="listings-grid" id="listingsGrid">
-          <p id="listingsLoading" class="text-sm text-muted" style="grid-column: 1 / -1; margin: 0">Loading vehicles…</p>
-          <p
-            id="listingsEmpty"
-            class="text-sm text-muted"
-            style="grid-column: 1 / -1; display: none; margin: 0; padding: 1.5rem; text-align: center"
-          >
-            No active, verified cars match your filters. Owners can list vehicles from the owner portal; moderators must verify new listings.
-          </p>
-        </div>
-
-        <div
-          class="flex-center gap-1 mt-4"
-          style="justify-content: center; flex-wrap: wrap"
-          id="listingsPagination"
-        ></div>
-      </div>
-    </div>
-  </div>
-  <div style="height:3rem"></div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: CAR DETAIL
-══════════════════════════ -->
-<div class="page" id="page-detail">
-  <div style="background:var(--forest);padding:80px 0 0"></div>
-  <p id="detailError" class="text-sm" style="display:none;color:#c43c3c;max-width:var(--wrap);margin:0 auto;padding:0.5rem 1.5rem" role="alert"></p>
-  <p id="detailLoading" class="text-sm text-muted" style="max-width:var(--wrap);margin:0 auto;padding:0.5rem 1.5rem">Loading vehicle…</p>
-  <div class="wrap" style="padding-top:2rem">
-    <button class="btn btn-outline btn-sm mb-2" onclick="showPage('listings')">← Back to Listings</button>
-    <div class="detail-layout" id="detailContent">
-      <div>
-        <!-- Gallery -->
-        <div class="detail-gallery" id="detailGallery">🚙
-          <div class="detail-gallery-badge"><span class="badge badge-green">✓ Verified Vehicle</span></div>
-        </div>
-        <div id="detailThumbs" class="detail-thumbs" style="display:none;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem" aria-label="More photos"></div>
-
-        <div class="mt-3">
-          <div class="flex-between">
-            <div>
-              <h1 id="detailTitle" style="font-family:var(--font-display);font-size:2rem;font-weight:700;letter-spacing:-0.5px">Loading…</h1>
-              <div class="car-loc mt-1" id="detailLoc">—</div>
-            </div>
-            <div style="text-align:right">
-              <div class="stars" style="font-size:16px">★★★★★</div>
-              <div class="text-sm text-muted mt-1">Verified listing</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Specs -->
-        <div class="detail-specs-grid">
-          <div class="detail-spec"><div class="detail-spec-icon">⛽</div><div class="detail-spec-val" id="detailSpecFuel">—</div><div class="detail-spec-lbl">Fuel Type</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">👥</div><div class="detail-spec-val" id="detailSpecSeats">—</div><div class="detail-spec-lbl">Capacity</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">🔧</div><div class="detail-spec-val" id="detailSpecTrans">—</div><div class="detail-spec-lbl">Transmission</div></div>
-          <div class="detail-spec"><div class="detail-spec-icon">📅</div><div class="detail-spec-val" id="detailSpecYear">—</div><div class="detail-spec-lbl">Year</div></div>
-        </div>
-
-        <hr class="divider">
-
-        <!-- Description -->
-        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:0.8rem">About This Vehicle</h3>
-        <p id="detailDescription" style="font-size:14px;color:var(--ink2);line-height:1.8">—</p>
-
-        <div class="flex gap-1 mt-3" style="flex-wrap:wrap">
-          <span class="badge badge-green">✓ 4WD</span>
-          <span class="badge badge-green">✓ Air Conditioning</span>
-          <span class="badge badge-green">✓ Roof Rack</span>
-          <span class="badge badge-green">✓ Driver Available</span>
-          <span class="badge badge-green">✓ First Aid Kit</span>
-          <span class="badge badge-green">✓ Govt. Registered</span>
-        </div>
-
-        <hr class="divider">
-
-        <!-- Owner -->
-        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:1rem">Vehicle Owner</h3>
-        <div class="detail-owner">
-          <div class="owner-avatar" id="detailOwnerAvatar">—</div>
-          <div style="flex:1">
-            <div class="owner-name" id="detailOwnerName">—</div>
-            <div class="owner-since" id="detailOwnerMeta">Verified on GB Trails</div>
-            <div class="owner-badge mt-1"><span class="badge badge-green">✓ ID Verified</span> <span class="badge badge-green">✓ Govt. Verified</span></div>
-          </div>
-          <div style="text-align:right">
-            <div class="stars">★★★★★</div>
-            <div class="text-xs text-muted">Local owner</div>
-          </div>
-        </div>
-
-        <hr class="divider">
-
-        <!-- Reviews -->
-        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:1rem">Reviews</h3>
-        <div style="display:flex;flex-direction:column;gap:1.2rem">
-          <div class="testi-card"><div class="stars">★★★★★</div><div class="testi-text mt-1">"Excellent vehicle. Imran was incredibly helpful with route planning through Hunza."</div><div class="testi-author mt-2"><div class="testi-avatar" style="width:32px;height:32px;font-size:12px">AK</div><div><div class="testi-name" style="font-size:13px">Ali Khan</div><div class="testi-loc">July 2024</div></div></div></div>
-          <div class="testi-card"><div class="stars">★★★★★</div><div class="testi-text mt-1">"Perfect for mountain roads. The 4WD system handled everything. Would book again."</div><div class="testi-author mt-2"><div class="testi-avatar" style="width:32px;height:32px;font-size:12px">SB</div><div><div class="testi-name" style="font-size:13px">Sara Baig</div><div class="testi-loc">June 2024</div></div></div></div>
-        </div>
-      </div>
-
-      <!-- BOOKING SIDEBAR -->
-      <div class="booking-sidebar">
-        <form class="booking-card" id="detailBookForm" novalidate>
-          <div class="booking-price" id="detailPrice">— <span>/ day</span></div>
-          <div class="stars mt-1">★★★★★ <span style="font-size:12px;color:var(--ink4);font-family:var(--font-body)">Verified listing</span></div>
-
-          <hr class="divider">
-          <p id="detailBookMsg" class="text-sm" style="display:none;margin-bottom:0.75rem" role="status"></p>
-
-          <div class="form-group">
-            <label class="form-label" for="detailBookStart">Pick-up Date</label>
-            <input type="date" class="form-input" id="detailBookStart" name="start" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="detailBookEnd">Return Date</label>
-            <input type="date" class="form-input" id="detailBookEnd" name="end" />
-          </div>
-          <h4 style="font-size:0.8rem;font-weight:700;margin:0.6rem 0 0.35rem;color:var(--ink3)">Renter details</h4>
-          <div class="form-group">
-            <label class="form-label" for="detailRenterName">Full name</label>
-            <input type="text" class="form-input" id="detailRenterName" name="renterName" autocomplete="name" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="detailRenterPhone">Phone</label>
-            <input type="tel" class="form-input" id="detailRenterPhone" name="renterPhone" autocomplete="tel" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="detailRenterEmail">Email</label>
-            <input type="email" class="form-input" id="detailRenterEmail" name="renterEmail" autocomplete="email" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="detailNumberOfPersons">Number of persons</label>
-            <input type="number" class="form-input" id="detailNumberOfPersons" name="numberOfPersons" min="1" max="50" value="1" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="detailRenterNotes">Notes (optional)</label>
-            <textarea class="form-input" id="detailRenterNotes" name="notes" rows="2" style="min-height:3.5rem;resize:vertical" placeholder="Pick-up time, special requests…"></textarea>
-          </div>
-          <p class="text-xs text-muted" style="margin:0 0 0.5rem">Return date is the day you bring the vehicle back. Estimates use daily rate × days.</p>
-
-          <div class="booking-breakdown" id="detailBookBreakdown">
-            <div class="booking-row total"><span>Estimated total</span><span>—</span></div>
-          </div>
-
-          <button type="submit" class="btn btn-amber btn-block btn-lg" id="detailBookBtn">Request to Book</button>
-          <div class="booking-note">Payment is settled directly with the owner. No online payment required. You will receive a confirmation when the owner accepts.</div>
-        </form>
-
-        <div class="alert alert-success mt-2">✓ Owner typically responds within <strong>2–4 hours</strong></div>
-        <div class="alert alert-warn mt-1">⚡ High demand this week — only 3 slots left in July</div>
-      </div>
-    </div>
-  </div>
-  <div style="height:3rem"></div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: AUTH
-══════════════════════════ -->
-<div class="page" id="page-auth">
-  <div class="auth-page">
-    <div class="auth-left">
-      <div class="auth-left-content">
-        <div class="auth-left-title">Your <em>GB adventure</em><br>starts here</div>
-        <div class="auth-left-sub">Create a free account to book vehicles, manage your trips, or list your own car for rental across Gilgit Baltistan.</div>
-        <ul class="auth-left-bullets">
-          <li>Instant booking requests</li>
-          <li>SMS & email confirmations</li>
-          <li>Full trip history & receipts</li>
-          <li>Verified owner profiles</li>
-          <li>List your vehicle & earn</li>
-        </ul>
-      </div>
-    </div>
-    <div class="auth-right">
-      <div class="auth-card">
-        <div class="auth-title">Welcome</div>
-        <div class="auth-sub">Login or create your account to continue</div>
-
-        <div class="auth-tabs" role="tablist">
-          <div class="auth-tab active" role="tab" data-auth-tab="login" id="authTabLogin" aria-selected="true" tabindex="0">Login</div>
-          <div class="auth-tab" role="tab" data-auth-tab="signup" id="authTabSignup" aria-selected="false" tabindex="0">Sign Up</div>
-        </div>
-
-        <p id="authError" class="form-group text-sm" style="display:none;color:#c43c3c;font-weight:600" role="alert"></p>
-
-        <!-- Login Form -->
-        <div id="auth-login">
-        <form id="form-login" autocomplete="on">
-          <div class="form-group">
-            <label class="form-label" for="loginEmailOrPhone">Phone Number or Email</label>
-            <input class="form-input" id="loginEmailOrPhone" name="emailOrPhone" type="text" required placeholder="+92 300 0000000" autocomplete="username" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="loginPassword">Password</label>
-            <input class="form-input" id="loginPassword" name="password" type="password" required placeholder="Enter password" autocomplete="current-password" />
-          </div>
-          <div class="flex-between mb-2">
-            <label class="flex-center gap-1 text-sm"><input type="checkbox" name="remember" /> Remember me</label>
-            <span style="font-size:13px;color:var(--moss);font-weight:600;opacity:0.7">Forgot password?</span>
-          </div>
-          <button type="submit" class="btn btn-forest btn-block btn-lg">Login →</button>
-        </form>
-        </div>
-
-        <!-- Signup Form -->
-        <div id="auth-signup" style="display:none">
-        <form id="form-signup" autocomplete="on">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="signupFirstName">First Name</label>
-              <input class="form-input" id="signupFirstName" name="firstName" type="text" required placeholder="Ali" autocomplete="given-name" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="signupLastName">Last Name</label>
-              <input class="form-input" id="signupLastName" name="lastName" type="text" placeholder="Khan" autocomplete="family-name" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signupPhone">Phone Number</label>
-            <input class="form-input" id="signupPhone" name="phone" type="tel" required placeholder="+92 300 0000000" autocomplete="tel" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signupEmail">Email Address</label>
-            <input class="form-input" id="signupEmail" name="email" type="email" required placeholder="you@email.com" autocomplete="email" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signupRole">I am a</label>
-            <select class="form-select" id="signupRole" name="role">
-              <option value="renter">Renter — looking to rent a vehicle</option>
-              <option value="owner">Owner — I want to list my vehicle</option>
-              <option value="both">Both (rent and list)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signupPassword">Password</label>
-            <input class="form-input" id="signupPassword" name="password" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password" />
-          </div>
-          <div class="mb-2">
-            <label class="flex-center gap-1 text-sm"><input type="checkbox" name="terms" required /> I agree to the Terms of Service and Privacy Policy</label>
-          </div>
-          <button type="submit" class="btn btn-amber btn-block btn-lg">Create Account →</button>
-        </form>
-        </div>
-
-        <div class="auth-switch">Switch between Login and Sign Up using the tabs above.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: RENTER DASHBOARD
-══════════════════════════ -->
-<div class="page" id="page-renter-dashboard">
-  <div class="dashboard-layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="renterSidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="renterSidebarAvatar">—</div>
-          <div><div class="sidebar-name" id="renterSidebarName">Renter</div><div class="sidebar-role">Renter Account</div></div>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section">Main</div>
-        <a class="sidebar-link active"><span class="sidebar-link-icon">🏠</span>Dashboard</a>
-        <a class="sidebar-link" onclick="showPage('listings')"><span class="sidebar-link-icon">🚙</span>Browse Cars</a>
-        <div class="sidebar-section">Bookings</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">📋</span>My Bookings<span class="sidebar-badge">3</span></a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">⏱</span>Pending</a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">✅</span>Completed</a>
-        <div class="sidebar-section">Account</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">👤</span>My Profile</a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">⭐</span>My Reviews</a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">🔔</span>Notifications</a>
-        <a class="sidebar-link" onclick="showPage('home')"><span class="sidebar-link-icon">🚪</span>Logout</a>
-      </nav>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="dashboard-main">
-      <div class="dashboard-header">
-        <div class="dashboard-welcome" id="renterWelcome">My bookings</div>
-        <div class="dashboard-date" id="renterDate"></div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-val" id="renterStatTotal">0</div><div class="stat-lbl">Total Bookings</div></div>
-        <div class="stat-box"><div class="stat-val amber" id="renterStatActive">0</div><div class="stat-lbl">Active / Upcoming</div></div>
-        <div class="stat-box"><div class="stat-val moss" id="renterStatDone">0</div><div class="stat-lbl">Completed Trips</div></div>
-        <div class="stat-box"><div class="stat-val" id="renterStatSpent">PKR<br><span style="font-size:1.4rem">0</span></div><div class="stat-lbl">Total Spent (est.)</div></div>
-      </div>
-
-      <div class="flex-between mb-2">
-        <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700">My Bookings</h2>
-        <button class="btn btn-amber btn-sm" onclick="showPage('listings')">+ New Booking</button>
-      </div>
-
-      <div class="bookings-list" id="renterBookingsList">
-        <p class="text-sm text-muted">Open this page to load your bookings from the server.</p>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: OWNER DASHBOARD
-══════════════════════════ -->
-<div class="page" id="page-owner-dashboard">
-  <div class="dashboard-layout">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" style="background:var(--moss)">IA</div>
-          <div><div class="sidebar-name">Imran Ali</div><div class="sidebar-role">Vehicle Owner</div></div>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section">Main</div>
-        <a class="sidebar-link active"><span class="sidebar-link-icon">🏠</span>Dashboard</a>
-        <div class="sidebar-section">Vehicles</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">🚙</span>My Vehicles</a>
-        <a class="sidebar-link" onclick="showPage('add-listing')"><span class="sidebar-link-icon">➕</span>Add New Vehicle</a>
-        <div class="sidebar-section">Bookings</div>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📋</span>My bookings</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'upcoming'; void showPage('owner-bookings');"><span class="sidebar-link-icon">🗓️</span>Upcoming</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'active'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📅</span>Active</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'completed'; void showPage('owner-bookings');"><span class="sidebar-link-icon">✅</span>Completed</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'declined'; void showPage('owner-bookings');"><span class="sidebar-link-icon">⛔</span>Declined</a>
-        <div class="sidebar-section">Earnings</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">💰</span>Earnings Summary</a>
-        <a class="sidebar-link"><span class="sidebar-link-icon">📊</span>Reports</a>
-        <div class="sidebar-section">Account</div>
-        <a class="sidebar-link"><span class="sidebar-link-icon">👤</span>My Profile</a>
-        <a class="sidebar-link" onclick="showPage('home')"><span class="sidebar-link-icon">🚪</span>Logout</a>
-      </nav>
-    </aside>
-
-    <main class="dashboard-main">
-      <div class="dashboard-header">
-        <div class="dashboard-welcome">Owner Dashboard</div>
-        <div class="dashboard-date">Imran Ali · Hunza Valley</div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-val moss" id="ownerStatVehicles">—</div><div class="stat-lbl">Vehicles Listed</div></div>
-        <div class="stat-box"><div class="stat-val amber" id="ownerStatPending">0</div><div class="stat-lbl">Pending Requests</div></div>
-        <div class="stat-box"><div class="stat-val" id="ownerStatTrips">—</div><div class="stat-lbl">Trips Completed</div></div>
-        <div class="stat-box"><div class="stat-val" id="ownerStatEarnings">—</div><div class="stat-lbl">Total Earnings</div></div>
-      </div>
-      <div class="mb-2" style="max-width:560px">
-        <p class="text-sm text-muted" style="margin:0.75rem 0 0.5rem">Renter requests and trip tabs: use <strong>My bookings</strong> in the side menu (matches the app).</p>
-        <button type="button" class="btn btn-forest btn-sm" onclick="window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');">My bookings</button>
-        <span class="badge badge-amber ml-1" id="ownerPendingBadge" style="margin-left:0.5rem">—</span>
-      </div>
-
-      <!-- Vehicle listings -->
-      <section class="owner-dash-section" style="background:rgba(255,255,255,0.7); border:1px solid var(--border); border-top:3px solid var(--moss, #2d5a3d); border-radius:12px; padding:1.25rem 1.4rem; margin:1.5rem 0 1.25rem" aria-label="My vehicles">
-        <div class="text-xs" style="font-weight:700; letter-spacing:0.14em; color:var(--ink3); text-transform:uppercase; margin-bottom:0.75rem">Listings (vehicles)</div>
-        <div class="flex-between mb-2" style="align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
-        <h2 style="font-family:var(--font-display);font-size:1.35rem;font-weight:700; margin:0">My vehicles</h2>
-        <button class="btn btn-amber btn-sm" onclick="showPage('add-listing')">+ Add Vehicle</button>
-      </div>
-      <div class="my-cars-grid">
-        <div class="my-car-card">
-          <div class="my-car-img">🚙<div class="my-car-status"><span class="badge badge-green">Active</span></div></div>
-          <div class="my-car-body">
-            <div class="my-car-name">Toyota Prado 2020</div>
-            <div class="text-sm text-muted">Hunza Valley · PKR 8,000/day</div>
-            <div class="my-car-stats">
-              <div><div class="my-car-stat-val">28</div><div class="my-car-stat-lbl">Trips</div></div>
-              <div><div class="my-car-stat-val">PKR 224K</div><div class="my-car-stat-lbl">Earned</div></div>
-              <div><div class="my-car-stat-val">4.9★</div><div class="my-car-stat-lbl">Rating</div></div>
-            </div>
-            <div class="my-car-actions">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-outline btn-sm">Calendar</button>
-              <button class="btn btn-outline btn-sm" style="color:#c43c3c">Pause</button>
-            </div>
-          </div>
-        </div>
-        <div class="my-car-card">
-          <div class="my-car-img">🏍<div class="my-car-status"><span class="badge badge-green">Active</span></div></div>
-          <div class="my-car-body">
-            <div class="my-car-name">Toyota Hilux Surf 2018</div>
-            <div class="text-sm text-muted">Fairy Meadows · PKR 9,500/day</div>
-            <div class="my-car-stats">
-              <div><div class="my-car-stat-val">4</div><div class="my-car-stat-lbl">Trips</div></div>
-              <div><div class="my-car-stat-val">PKR 88K</div><div class="my-car-stat-lbl">Earned</div></div>
-              <div><div class="my-car-stat-val">5.0★</div><div class="my-car-stat-lbl">Rating</div></div>
-            </div>
-            <div class="my-car-actions">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-outline btn-sm">Calendar</button>
-              <button class="btn btn-outline btn-sm" style="color:#c43c3c">Pause</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      </section>
-    </main>
-  </div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: OWNER — MY BOOKINGS (tabs, matches apps/web)
-══════════════════════════ -->
-<div class="page" id="page-owner-bookings">
-  <div class="dashboard-layout">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" style="background:var(--moss)">IA</div>
-          <div><div class="sidebar-name">Imran Ali</div><div class="sidebar-role">Vehicle Owner</div></div>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section">Main</div>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">🏠</span>Dashboard</a>
-        <div class="sidebar-section">Vehicles</div>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">🚙</span>My Vehicles</a>
-        <a class="sidebar-link" onclick="showPage('add-listing')"><span class="sidebar-link-icon">➕</span>Add New Vehicle</a>
-        <div class="sidebar-section">Bookings</div>
-        <a class="sidebar-link active" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'pending'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📋</span>My bookings</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'upcoming'; void showPage('owner-bookings');"><span class="sidebar-link-icon">🗓️</span>Upcoming</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'active'; void showPage('owner-bookings');"><span class="sidebar-link-icon">📅</span>Active</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'completed'; void showPage('owner-bookings');"><span class="sidebar-link-icon">✅</span>Completed</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); window.__ownerBookingsTab = 'declined'; void showPage('owner-bookings');"><span class="sidebar-link-icon">⛔</span>Declined</a>
-        <div class="sidebar-section">Earnings</div>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">💰</span>Earnings Summary</a>
-        <a class="sidebar-link" href="#" onclick="event.preventDefault(); void showPage('owner-dashboard')"><span class="sidebar-link-icon">📊</span>Reports</a>
-        <div class="sidebar-section">Account</div>
-        <a class="sidebar-link" onclick="showPage('auth')"><span class="sidebar-link-icon">👤</span>My Profile</a>
-        <a class="sidebar-link" onclick="showPage('home')"><span class="sidebar-link-icon">🚪</span>Logout</a>
-      </nav>
-    </aside>
-    <main class="dashboard-main">
-      <div class="flex-between" style="align-items:flex-start; flex-wrap:wrap; gap:1rem; margin-bottom:0.5rem">
-        <div>
-          <div class="dashboard-welcome">My bookings</div>
-          <p class="text-sm text-muted" style="max-width:560px; margin:0.35rem 0 0; line-height:1.5">Use tabs to match the React app: <strong>Pending</strong>, <strong>Upcoming</strong>, <strong>Active</strong>, <strong>Completed</strong>, <strong>Declined</strong>.</p>
-        </div>
-        <button type="button" class="btn btn-outline btn-sm" onclick="showPage('owner-dashboard')">← Dashboard</button>
-      </div>
-      <div class="mb-2" id="ownerBookingTabBar" style="display:flex; flex-wrap:wrap; gap:0.4rem; border-bottom:1px solid var(--border); padding:0.35rem 0 0.75rem">
-        <button type="button" class="btn btn-sm" style="min-height:2rem" data-owner-btab="pending" onclick="setOwnerBookingsTab('pending')">Pending</button>
-        <button type="button" class="btn btn-sm" data-owner-btab="upcoming" onclick="setOwnerBookingsTab('upcoming')">Upcoming</button>
-        <button type="button" class="btn btn-sm" data-owner-btab="active" onclick="setOwnerBookingsTab('active')">Active</button>
-        <button type="button" class="btn btn-sm" data-owner-btab="completed" onclick="setOwnerBookingsTab('completed')">Completed</button>
-        <button type="button" class="btn btn-sm" data-owner-btab="declined" onclick="setOwnerBookingsTab('declined')">Declined</button>
-      </div>
-      <div class="bookings-list" id="ownerBookingsTabbedList" aria-live="polite">
-        <p class="text-sm text-muted">Loading…</p>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- ══════════════════════════
-     PAGE: ADD LISTING
-══════════════════════════ -->
-<div class="page" id="page-add-listing">
-  <div style="background:var(--forest);padding:80px 0 0"></div>
-  <div class="wrap" style="padding-top:2.5rem;padding-bottom:3rem">
-    <button class="btn btn-outline btn-sm mb-3" onclick="showPage('owner-dashboard')">← Back to Dashboard</button>
-    <div class="eyebrow">Owner Portal</div>
-    <h1 style="font-family:var(--font-display);font-size:2.2rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:2rem">List Your Vehicle</h1>
-
-    <div class="add-listing-layout">
-      <div>
-        <p id="addListingError" class="form-group text-sm" style="display:none;color:#c43c3c;font-weight:600" role="alert"></p>
-        <p id="addListingSuccess" class="form-group text-sm" style="display:none;color:var(--moss);font-weight:600" role="status"></p>
-
-        <form id="form-add-listing" novalidate>
-        <!-- Basic Info -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="form-section-icon">🚙</span> Vehicle Information</div>
-          <div class="form-group">
-            <label class="form-label" for="addListingTitle">Listing title</label>
-            <input class="form-input" id="addListingTitle" name="title" required minlength="2" placeholder="e.g. Toyota Prado 2020 — Hunza" autocomplete="off" />
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingBrand">Make (brand)</label>
-              <select class="form-select" id="addListingBrand" name="brand" required></select>
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingModel">Model</label>
-              <select class="form-select" id="addListingModel" name="model" required></select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingYear">Year</label>
-              <input class="form-input" id="addListingYear" name="year" type="number" required min="1980" placeholder="2020" />
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingVehicleType">Vehicle type * <span class="text-xs" style="opacity:0.75">(used for search filters)</span></label>
-              <select class="form-select" id="addListingVehicleType" name="vehicleType" required>
-                <option value="">Select…</option>
-                <option value="suv_4wd">SUV / 4WD</option>
-                <option value="jeep">Jeep</option>
-                <option value="sedan">Sedan</option>
-                <option value="van_coaster">Van / Coaster</option>
-                <option value="pickup">Pickup</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingFuel">Fuel</label>
-              <select class="form-select" id="addListingFuel" name="fuelType" required>
-                <option value="diesel">Diesel</option>
-                <option value="petrol">Petrol</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="electric">Electric</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingSeats">Seats</label>
-              <input class="form-input" id="addListingSeats" name="seats" type="number" min="1" max="12" placeholder="7" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingTransmission">Transmission</label>
-              <select class="form-select" id="addListingTransmission" name="transmission" required>
-                <option value="manual">Manual</option>
-                <option value="automatic">Automatic</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingColor">Color (optional)</label>
-              <select class="form-select" id="addListingColor" name="color"></select>
-            </div>
-          </div>
-          <div class="form-group"><label class="form-label" for="addListingReg">Registration number</label>
-            <input class="form-input" id="addListingReg" name="registrationNumber" required minlength="3" placeholder="e.g. GB-1234" autocomplete="off" />
-          </div>
-          <div class="form-group"><label class="form-label" for="addListingDescription">Description</label>
-            <textarea class="form-textarea" id="addListingDescription" name="description" rows="5" placeholder="Condition, features, terrain suitability, driver option…"></textarea>
-          </div>
-        </div>
-
-        <!-- Location & Pricing -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="form-section-icon">📍</span> Location & Pricing</div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingDistrict">District / area</label>
-              <input class="form-input" id="addListingDistrict" name="district" required minlength="2" placeholder="e.g. Hunza, Skardu" list="addListingDistrictList" />
-              <datalist id="addListingDistrictList">
-                <option value="Hunza"></option>
-                <option value="Skardu"></option>
-                <option value="Gilgit"></option>
-                <option value="Naran"></option>
-                <option value="Fairy Meadows"></option>
-              </datalist>
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingCity">City (optional)</label>
-              <input class="form-input" id="addListingCity" name="city" placeholder="Town or village" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="addListingPrice">Price per day (PKR)</label>
-              <input class="form-input" id="addListingPrice" name="basePricePerDay" type="number" required min="0" step="100" placeholder="8000" />
-            </div>
-            <div class="form-group"><label class="form-label" for="addListingCurrency">Currency</label>
-              <input class="form-input" id="addListingCurrency" name="currency" value="PKR" maxlength="3" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Photos -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="form-section-icon">📸</span> Vehicle Photos</div>
-          <p class="text-xs text-muted mb-2">At least one photo (JPEG, PNG, or WebP). Up to 10 images.</p>
-          <div class="form-group">
-            <label class="form-label" for="addListingImages">Photos (max 5)</label>
-            <input type="file" id="addListingImages" accept="image/jpeg,image/png,image/webp" multiple />
-            <p class="text-xs text-muted" style="margin:0.35rem 0 0">Renters can view all photos on the vehicle page.</p>
-          </div>
-        </div>
-
-        <!-- Documents -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="form-section-icon">📄</span> Documents for Verification</div>
-          <div class="alert alert-warn">Registration (RC) PDF is required. Other PDFs improve verification speed. Only PDF files for documents.</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="addListingDocRc">Vehicle registration (RC) — required (PDF)</label>
-              <input type="file" id="addListingDocRc" accept="application/pdf" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="addListingDocCnic">Owner CNIC (PDF, optional)</label>
-              <input type="file" id="addListingDocCnic" accept="application/pdf" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="addListingDocFitness">Fitness certificate (PDF, optional)</label>
-              <input type="file" id="addListingDocFitness" accept="application/pdf" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="addListingDocInsurance">Insurance (PDF, optional)</label>
-              <input type="file" id="addListingDocInsurance" accept="application/pdf" />
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:1rem;flex-wrap:wrap">
-          <button type="button" class="btn btn-amber btn-lg" id="addListingSubmitActive" data-add-status="active">Submit for verification →</button>
-          <button type="button" class="btn btn-outline btn-lg" id="addListingSubmitDraft" data-add-status="draft">Save as draft</button>
-        </div>
-        </form>
-      </div>
-
-      <!-- TIPS SIDEBAR -->
-      <div>
-        <div class="listing-tip">
-          <div class="listing-tip-title">💡 Tips for a great listing</div>
-          <div class="listing-tip-item">Use natural daylight for photos — bright, clear images get 3× more bookings.</div>
-          <div class="listing-tip-item">Write an honest description mentioning the vehicle's strengths and any limitations.</div>
-          <div class="listing-tip-item">Set a competitive price — check similar vehicles in your area to benchmark.</div>
-          <div class="listing-tip-item">Respond to requests within 2 hours to improve your acceptance rate and ranking.</div>
-          <div class="listing-tip-item">Keep your availability calendar up to date to avoid booking conflicts.</div>
-        </div>
-
-        <div class="listing-tip">
-          <div class="listing-tip-title">🔍 Verification Process</div>
-          <div class="text-sm text-muted mb-2">Your listing goes through these steps before going live:</div>
-          <div class="verification-steps">
-            <div class="verify-step"><div class="verify-circle">1</div>Document submission</div>
-            <div class="verify-step"><div class="verify-circle">2</div>Identity verification (CNIC)</div>
-            <div class="verify-step"><div class="verify-circle">3</div>Vehicle registration check</div>
-            <div class="verify-step"><div class="verify-circle">4</div>Admin approval (24–72 hrs)</div>
-            <div class="verify-step"><div class="verify-circle">5</div>Listing goes live ✓</div>
-          </div>
-        </div>
-
-        <div class="listing-tip">
-          <div class="listing-tip-title">💰 How Earnings Work</div>
-          <div class="text-sm" style="color:var(--ink3);line-height:1.8">
-            Renters pay you <strong>directly</strong> — cash or bank transfer. GB Trails does not handle payments currently.<br><br>
-            In the future, a small platform fee may apply to support ongoing operations and insurance services.<br><br>
-            All bookings and payments are logged for your records.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="/js/api.js" defer></script>
-<script src="/js/auth.js" defer></script>
-<script src="/js/listings.js" defer></script>
-<script src="/js/detail.js" defer></script>
-<script src="/js/bookings.js" defer></script>
-<script src="/js/vehicleOptions.js" defer></script>
-<script src="/js/addListing.js" defer></script>
-<script src="/js/app.js" defer></script>
+    </section>
+    <div class="noise" aria-hidden="true"></div>
+  </main>
 </body>
 </html>

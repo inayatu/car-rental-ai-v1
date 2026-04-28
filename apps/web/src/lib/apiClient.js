@@ -12,6 +12,23 @@ function createRefreshClient() {
   });
 }
 
+async function runRefreshFlow() {
+  const { refreshToken } = getStoredTokens();
+  const c = createRefreshClient();
+  const payload = refreshToken ? { refreshToken } : {};
+  const r = await c.post("/auth/refresh", payload);
+  const d = r.data || {};
+  if (!d.accessToken) {
+    throw new Error("Refresh response missing access token");
+  }
+  if (d.refreshToken) {
+    setStoredTokens(d.accessToken, d.refreshToken);
+  } else {
+    setStoredAccessToken(d.accessToken);
+  }
+  return d;
+}
+
 export const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
@@ -46,26 +63,9 @@ api.interceptors.response.use(
       return Promise.reject(err);
     }
 
-    const { refreshToken } = getStoredTokens();
-    if (!refreshToken) {
-      clearStoredTokens();
-      return Promise.reject(err);
-    }
-
     try {
       if (!refreshInFlight) {
-        const c = createRefreshClient();
-        refreshInFlight = c
-          .post("/auth/refresh", { refreshToken })
-          .then((r) => {
-            const d = r.data;
-            if (d?.accessToken && d?.refreshToken) {
-              setStoredTokens(d.accessToken, d.refreshToken);
-            } else if (d?.accessToken) {
-              setStoredAccessToken(d.accessToken);
-            }
-            return d;
-          })
+        refreshInFlight = runRefreshFlow()
           .finally(() => {
             refreshInFlight = null;
           });

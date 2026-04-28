@@ -6,6 +6,8 @@ import { StatBox } from "../components/ui/StatBox.jsx";
 import { Alert } from "../components/ui/Alert.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
 import { Sidebar } from "../components/layout/Sidebar.jsx";
+import { EditCarModal } from "../components/owner/EditCarModal.jsx";
+import { Pagination } from "../components/ui/Pagination.jsx";
 import { api } from "../lib/apiClient.js";
 import { PATH } from "../lib/paths.js";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
@@ -13,6 +15,8 @@ import { resolveAssetUrl } from "../lib/resolveApiUrl.js";
 import { Eyebrow } from "../components/ui/Eyebrow.jsx";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
+
+const CARS_PAGE_SIZE = 6;
 
 const sectionPanel = (accent) => ({
   marginBottom: "2rem",
@@ -32,6 +36,11 @@ export function PageOwnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
   const [actionErr, setActionErr] = useState(null);
+  const [editingCar, setEditingCar] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editErr, setEditErr] = useState(null);
+  const [listedPage, setListedPage] = useState(1);
+  const [removedPage, setRemovedPage] = useState(1);
 
   const load = useCallback(async () => {
     setErr(null);
@@ -57,6 +66,7 @@ export function PageOwnerDashboard() {
 
   const runCarAction = async (id, fn) => {
     setActionErr(null);
+    setEditErr(null);
     setActionId(id);
     try {
       await fn();
@@ -79,8 +89,29 @@ export function PageOwnerDashboard() {
 
   const restoreListing = (id) => runCarAction(id, () => api.post(`/cars/${id}/restore`));
 
+  const saveEditedListing = async (payload) => {
+    if (!editingCar?.id) return;
+    setEditErr(null);
+    setSavingEdit(true);
+    try {
+      await api.patch(`/cars/${editingCar.id}`, payload);
+      setEditingCar(null);
+      await load();
+    } catch (e) {
+      setEditErr(e?.response?.data?.message || e?.message || "Could not save listing changes.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const listedCars = cars.filter((c) => !c.isDeleted);
   const removedCars = cars.filter((c) => c.isDeleted);
+  const listedTotalPages = Math.max(1, Math.ceil(listedCars.length / CARS_PAGE_SIZE));
+  const removedTotalPages = Math.max(1, Math.ceil(removedCars.length / CARS_PAGE_SIZE));
+  const listedSafePage = Math.min(listedPage, listedTotalPages);
+  const removedSafePage = Math.min(removedPage, removedTotalPages);
+  const listedPaged = listedCars.slice((listedSafePage - 1) * CARS_PAGE_SIZE, listedSafePage * CARS_PAGE_SIZE);
+  const removedPaged = removedCars.slice((removedSafePage - 1) * CARS_PAGE_SIZE, removedSafePage * CARS_PAGE_SIZE);
 
   const pending = bookings.filter((b) => b.status === "requested");
   const activeCount = listedCars.filter((x) => x.status === "active").length;
@@ -207,7 +238,7 @@ export function PageOwnerDashboard() {
           }}
         >
           {listedCars.length === 0 && !loading && <p style={{ color: "var(--ink3)", gridColumn: "1 / -1" }}>No vehicles yet. Add one to get booking requests.</p>}
-          {listedCars.map((v) => {
+          {listedPaged.map((v) => {
             const cover = v.images?.[0] ? resolveAssetUrl(v.images[0]) : null;
             const ver = v.verification?.status || "—";
             const verVariant = ver === "verified" ? "teal" : ver === "pending" ? "gold" : "gray";
@@ -244,6 +275,9 @@ export function PageOwnerDashboard() {
                     <strong>active</strong> = eligible for public search (once verified). <strong>paused</strong> = hidden. <strong>draft</strong> = not live.
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.5rem" }}>
+                    <Btn type="button" variant="outline" size="sm" disabled={busy} onClick={() => setEditingCar(v)}>
+                      Edit
+                    </Btn>
                     {v.status === "active" && (
                       <Btn type="button" variant="outline" size="sm" disabled={busy} onClick={() => setListingStatus(v.id, "paused")}>
                         Pause
@@ -280,6 +314,9 @@ export function PageOwnerDashboard() {
             );
           })}
         </div>
+        {!loading && listedCars.length > 0 ? (
+          <Pagination page={listedSafePage} totalPages={listedTotalPages} onPageChange={setListedPage} />
+        ) : null}
         </section>
 
         {removedCars.length > 0 && (
@@ -306,7 +343,7 @@ export function PageOwnerDashboard() {
                 opacity: 0.95,
               }}
             >
-              {removedCars.map((v) => {
+              {removedPaged.map((v) => {
                 const cover = v.images?.[0] ? resolveAssetUrl(v.images[0]) : null;
                 const busy = actionId === v.id;
                 return (
@@ -342,9 +379,26 @@ export function PageOwnerDashboard() {
                 );
               })}
             </div>
+            {!loading && removedCars.length > 0 ? (
+              <Pagination page={removedSafePage} totalPages={removedTotalPages} onPageChange={setRemovedPage} />
+            ) : null}
           </>
         )}
       </main>
+      {editingCar ? (
+        <EditCarModal
+          car={editingCar}
+          saving={savingEdit}
+          error={editErr}
+          onClose={() => {
+            if (!savingEdit) {
+              setEditingCar(null);
+              setEditErr(null);
+            }
+          }}
+          onSave={saveEditedListing}
+        />
+      ) : null}
     </div>
   );
 }

@@ -28,6 +28,8 @@ const fmt = (v) => (v != null && String(v).trim() !== "" ? v : "—");
 export function OwnerBookingCard({ booking, showPendingActions, showSubkind, showMarkComplete, onAccept, onDecline, onMarkComplete, actionId }) {
   const b = booking;
   const sub = b.status === "accepted" && showSubkind ? activeRentalSubKind(b) : null;
+  const contactVisible = b.status === "accepted" || b.status === "completed";
+  const displayName = contactVisible ? fmt(b.renterName) : "Hidden until booking is confirmed";
   return (
     <Card
       style={{
@@ -105,15 +107,15 @@ export function OwnerBookingCard({ booking, showPendingActions, showSubkind, sho
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: "0.65rem 1.2rem", fontSize: 13 }}>
           <div>
             <div style={{ fontSize: 10, color: "var(--ink4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Full name</div>
-            <div style={{ fontWeight: 600, color: "var(--ink)" }}>{fmt(b.renterName)}</div>
+            <div style={{ fontWeight: 600, color: "var(--ink)" }}>{displayName}</div>
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--ink4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Phone</div>
-            <div>{fmt(b.renterPhone)}</div>
+            <div>{contactVisible ? fmt(b.renterPhone) : "Hidden until booking is confirmed"}</div>
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--ink4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</div>
-            <div style={{ wordBreak: "break-all" }}>{fmt(b.renterEmail)}</div>
+            <div style={{ wordBreak: "break-all" }}>{contactVisible ? fmt(b.renterEmail) : "Hidden until booking is confirmed"}</div>
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--ink4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Number of persons</div>
@@ -124,7 +126,7 @@ export function OwnerBookingCard({ booking, showPendingActions, showSubkind, sho
           <div style={{ fontSize: 10, color: "var(--ink4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Notes from renter</div>
           <div style={{ color: "var(--ink2)", lineHeight: 1.5, marginTop: 2 }}>{b.notes ? `“${b.notes}”` : "—"}</div>
         </div>
-        {b.renterAccount && (b.renterAccount.name || b.renterAccount.email || b.renterAccount.phone) && (
+        {contactVisible && b.renterAccount && (b.renterAccount.name || b.renterAccount.email || b.renterAccount.phone) && (
           <div
             style={{
               marginTop: "0.9rem",

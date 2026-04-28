@@ -6,6 +6,7 @@ import { Alert } from "../components/ui/Alert.jsx";
 import { Sidebar } from "../components/layout/Sidebar.jsx";
 import { Eyebrow } from "../components/ui/Eyebrow.jsx";
 import { OwnerBookingCard } from "../components/owner/OwnerBookingCard.jsx";
+import { Pagination } from "../components/ui/Pagination.jsx";
 import { api } from "../lib/apiClient.js";
 import { PATH } from "../lib/paths.js";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
@@ -18,6 +19,7 @@ const TABS = /** @type {const} */ ([
   { id: "completed", label: "Completed" },
   { id: "declined", label: "Declined" },
 ]);
+const PAGE_SIZE = 8;
 
 const emptyCopy = (tab) => {
   if (tab === "pending") return "No pending requests. New renter requests will show up here.";
@@ -31,6 +33,8 @@ export function PageOwnerBookings() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseOwnerBookingTab(searchParams.get("tab"));
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
   const [bookings, setBookings] = useState([]);
   const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +63,14 @@ export function PageOwnerBookings() {
     setSearchParams({ tab: id });
   };
 
+  const setPage = (nextPage) => {
+    const next = Math.max(1, nextPage);
+    const params = new URLSearchParams();
+    params.set("tab", tab);
+    if (next > 1) params.set("page", String(next));
+    setSearchParams(params);
+  };
+
   const run = async (id, fn) => {
     setActionErr(null);
     setActionId(id);
@@ -81,6 +93,12 @@ export function PageOwnerBookings() {
       return 0;
     });
   }, [bookings, tab]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
 
   return (
     <div style={shellDashboard}>
@@ -165,7 +183,7 @@ export function PageOwnerBookings() {
           {!loading && filtered.length === 0 && <p style={{ color: "var(--ink3)" }}>{emptyCopy(tab)}</p>}
 
           {!loading &&
-            filtered.map((b) => (
+            paged.map((b) => (
               <OwnerBookingCard
                 key={b.id}
                 booking={b}
@@ -181,6 +199,9 @@ export function PageOwnerBookings() {
               />
             ))}
         </div>
+        {!loading && filtered.length > 0 ? (
+          <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+        ) : null}
       </main>
     </div>
   );

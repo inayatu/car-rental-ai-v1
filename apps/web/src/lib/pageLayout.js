@@ -3,11 +3,12 @@
  */
 export const shellDashboard = {
   display: "flex",
-  minHeight: "100vh",
+  height: "100vh",
   paddingTop: 64,
   minWidth: 0,
   width: "100%",
   maxWidth: "100vw",
+  overflow: "hidden",
   boxSizing: "border-box",
 };
 

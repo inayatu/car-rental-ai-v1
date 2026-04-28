@@ -73,6 +73,8 @@ export function PageDetail() {
     display?.images && display.images.length > 0 ? display.images : display?.image ? [display.image] : [];
   const galleryIdx = gallery.length ? Math.min(imageIndex, gallery.length - 1) : 0;
   const activeSrc = gallery[galleryIdx] || null;
+  const todayIso = dayjs().format("YYYY-MM-DD");
+  const returnMinDate = pickDate || todayIso;
 
   const days = pickDate && retDate ? Math.max(1, (new Date(retDate) - new Date(pickDate)) / 86400000) : 0;
   const estTotal = display && days > 0 ? display.price * days : null;
@@ -90,6 +92,18 @@ export function PageDetail() {
     }
     if (!pickDate || !retDate) {
       setBookErr("Please choose pick-up and return dates.");
+      return;
+    }
+    if (dayjs(pickDate).isBefore(dayjs().startOf("day"), "day")) {
+      setBookErr("Pick-up date cannot be older than today.");
+      return;
+    }
+    if (dayjs(retDate).isBefore(dayjs().startOf("day"), "day")) {
+      setBookErr("Return date cannot be older than today.");
+      return;
+    }
+    if (dayjs(retDate).isBefore(dayjs(pickDate), "day")) {
+      setBookErr("Return date cannot be earlier than pick-up date.");
       return;
     }
     const nameTrim = renterName.trim();
@@ -429,10 +443,21 @@ export function PageDetail() {
               </div>
               <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "1.2rem 0" }} />
               <FormGroup label="Pick-up Date">
-                <input type="date" value={pickDate} onChange={(e) => setPickDate(e.target.value)} />
+                <input
+                  type="date"
+                  min={todayIso}
+                  value={pickDate}
+                  onChange={(e) => {
+                    const nextPick = e.target.value;
+                    setPickDate(nextPick);
+                    if (retDate && dayjs(retDate).isBefore(dayjs(nextPick), "day")) {
+                      setRetDate(nextPick);
+                    }
+                  }}
+                />
               </FormGroup>
               <FormGroup label="Return Date">
-                <input type="date" value={retDate} onChange={(e) => setRetDate(e.target.value)} />
+                <input type="date" min={returnMinDate} value={retDate} onChange={(e) => setRetDate(e.target.value)} />
               </FormGroup>
               <div
                 style={{

@@ -22,6 +22,13 @@ function bookingRenterId(booking) {
   return r;
 }
 
+/** Owner id whether `ownerId` is populated or a plain ObjectId. */
+function bookingOwnerId(booking) {
+  const o = booking.ownerId;
+  if (o && typeof o === "object" && o._id) return o._id;
+  return o;
+}
+
 function calculateTotalDays(startDate, endDate) {
   const ms = endDate.getTime() - startDate.getTime();
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
@@ -37,6 +44,25 @@ function assertValidDateRange(startDate, endDate) {
 
   if (!(endDate instanceof Date) || Number.isNaN(endDate.getTime())) {
     const err = new Error("Invalid end date");
+    err.status = 400;
+    throw err;
+  }
+
+  const startDay = new Date(startDate);
+  startDay.setHours(0, 0, 0, 0);
+  const endDay = new Date(endDate);
+  endDay.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (startDay < today) {
+    const err = new Error("startDate cannot be older than today");
+    err.status = 400;
+    throw err;
+  }
+
+  if (endDay < today) {
+    const err = new Error("endDate cannot be older than today");
     err.status = 400;
     throw err;
   }
@@ -181,7 +207,7 @@ async function getBookingByIdForActor(actorId, actorRole, bookingId) {
   }
 
   const isRenter = String(bookingRenterId(booking)) === String(actorId);
-  const isOwner = String(booking.ownerId) === String(actorId);
+  const isOwner = String(bookingOwnerId(booking)) === String(actorId);
   if (!isRenter && !isOwner) {
     const err = new Error("Forbidden");
     err.status = 403;
@@ -195,7 +221,7 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
   const requestedStatus = updates.status;
   const currentStatus = booking.status;
   const isRenter = String(bookingRenterId(booking)) === String(actorId);
-  const isOwner = String(booking.ownerId) === String(actorId);
+  const isOwner = String(bookingOwnerId(booking)) === String(actorId);
   const isStaff = actorRole === "admin" || actorRole === "govt_staff";
 
   if (!requestedStatus) {

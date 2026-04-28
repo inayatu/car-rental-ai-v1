@@ -54,11 +54,11 @@ function getAccessTokenFromRequest(req) {
 }
 
 function getRefreshTokenFromRequest(req) {
-  if (req.body && typeof req.body.refreshToken === "string" && req.body.refreshToken.length > 0) {
-    return req.body.refreshToken;
-  }
   if (req.cookies && req.cookies[COOKIE_REFRESH]) {
     return req.cookies[COOKIE_REFRESH];
+  }
+  if (req.body && typeof req.body.refreshToken === "string" && req.body.refreshToken.length > 0) {
+    return req.body.refreshToken;
   }
   return null;
 }

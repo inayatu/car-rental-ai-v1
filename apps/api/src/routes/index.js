@@ -28,6 +28,10 @@ function registerRoutes(app) {
 
   // __dirname is .../src/routes; public/ lives at apps/api/public (not src/public)
   const publicDir = path.join(__dirname, "..", "..", "public");
+  const forbiddenIndex = path.join(publicDir, "index.html");
+  app.get(["/", "/index.html", "/api"], (_req, res) => {
+    return res.status(403).sendFile(forbiddenIndex);
+  });
   app.use(express.static(publicDir));
 }
 
