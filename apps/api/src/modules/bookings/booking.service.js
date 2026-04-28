@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Booking = require("./booking.model");
 const Car = require("../cars/car.model");
+const { Messages, invalidField } = require("../../constants/errorMessages");
 
 const BLOCKING_BOOKING_STATUSES = new Set(["requested", "accepted"]);
 const ACTIVE_BOOKING_STATUSES = new Set(["requested", "accepted"]);
@@ -9,7 +10,7 @@ const BOOKING_CAR_POPULATE_SELECT =
 
 function ensureValidObjectId(id, fieldName = "id") {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error(`Invalid ${fieldName}`);
+    const err = new Error(invalidField(fieldName));
     err.status = 400;
     throw err;
   }
@@ -37,13 +38,13 @@ function calculateTotalDays(startDate, endDate) {
 
 function assertValidDateRange(startDate, endDate) {
   if (!(startDate instanceof Date) || Number.isNaN(startDate.getTime())) {
-    const err = new Error("Invalid start date");
+    const err = new Error(Messages.booking.invalidStartDate);
     err.status = 400;
     throw err;
   }
 
   if (!(endDate instanceof Date) || Number.isNaN(endDate.getTime())) {
-    const err = new Error("Invalid end date");
+    const err = new Error(Messages.booking.invalidEndDate);
     err.status = 400;
     throw err;
   }
@@ -56,19 +57,19 @@ function assertValidDateRange(startDate, endDate) {
   today.setHours(0, 0, 0, 0);
 
   if (startDay < today) {
-    const err = new Error("startDate cannot be older than today");
+    const err = new Error(Messages.booking.startDateNotPast);
     err.status = 400;
     throw err;
   }
 
   if (endDay < today) {
-    const err = new Error("endDate cannot be older than today");
+    const err = new Error(Messages.booking.endDateNotPast);
     err.status = 400;
     throw err;
   }
 
   if (endDate <= startDate) {
-    const err = new Error("endDate must be greater than startDate");
+    const err = new Error(Messages.booking.endAfterStart);
     err.status = 400;
     throw err;
   }
@@ -88,7 +89,7 @@ async function assertNoDateOverlap(carId, startDate, endDate, excludeBookingId) 
 
   const exists = await Booking.exists(query);
   if (exists) {
-    const err = new Error("Car is already booked for overlapping dates");
+    const err = new Error(Messages.booking.overlappingDates);
     err.status = 409;
     throw err;
   }
@@ -112,25 +113,25 @@ async function createBooking(renterId, renterRole, payload) {
 
   const car = await Car.findById(payload.carId);
   if (!car) {
-    const err = new Error("Car not found");
+    const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;
   }
 
   if (String(car.ownerId) === String(renterId)) {
-    const err = new Error("Owner cannot create booking on own car");
+    const err = new Error(Messages.booking.ownerCannotBookOwnCar);
     err.status = 400;
     throw err;
   }
 
   if (car.status !== "active") {
-    const err = new Error("Car is not available for booking");
+    const err = new Error(Messages.booking.carNotAvailable);
     err.status = 409;
     throw err;
   }
 
   if (car.verification?.status !== "verified") {
-    const err = new Error("Car is not verified for booking");
+    const err = new Error(Messages.booking.carNotVerifiedForBooking);
     err.status = 409;
     throw err;
   }
@@ -197,7 +198,7 @@ async function getBookingByIdForActor(actorId, actorRole, bookingId) {
     .populate("renterId", "name email phone")
     .populate("ownerId", "name email phone");
   if (!booking) {
-    const err = new Error("Booking not found");
+    const err = new Error(Messages.booking.notFound);
     err.status = 404;
     throw err;
   }
@@ -209,7 +210,7 @@ async function getBookingByIdForActor(actorId, actorRole, bookingId) {
   const isRenter = String(bookingRenterId(booking)) === String(actorId);
   const isOwner = String(bookingOwnerId(booking)) === String(actorId);
   if (!isRenter && !isOwner) {
-    const err = new Error("Forbidden");
+    const err = new Error(Messages.http.forbidden);
     err.status = 403;
     throw err;
   }
@@ -225,7 +226,7 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
   const isStaff = actorRole === "admin" || actorRole === "govt_staff";
 
   if (!requestedStatus) {
-    const err = new Error("status is required");
+    const err = new Error(Messages.booking.statusRequired);
     err.status = 400;
     throw err;
   }
@@ -236,12 +237,12 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
 
   if (isRenter) {
     if (requestedStatus !== "cancelled") {
-      const err = new Error("Renter can only cancel own booking");
+      const err = new Error(Messages.booking.renterCancelOnly);
       err.status = 403;
       throw err;
     }
     if (!ACTIVE_BOOKING_STATUSES.has(currentStatus)) {
-      const err = new Error("Only active bookings can be cancelled");
+      const err = new Error(Messages.booking.onlyActiveBookingsCancel);
       err.status = 409;
       throw err;
     }
@@ -250,14 +251,14 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
 
   if (isOwner) {
     if (!["accepted", "rejected", "completed", "cancelled"].includes(requestedStatus)) {
-      const err = new Error("Owner cannot set this booking status");
+      const err = new Error(Messages.booking.ownerCannotSetStatus);
       err.status = 403;
       throw err;
     }
 
     if (requestedStatus === "accepted" || requestedStatus === "rejected") {
       if (currentStatus !== "requested") {
-        const err = new Error("Only requested bookings can be accepted or rejected");
+        const err = new Error(Messages.booking.onlyRequestedAcceptReject);
         err.status = 409;
         throw err;
       }
@@ -266,7 +267,7 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
 
     if (requestedStatus === "completed") {
       if (currentStatus !== "accepted") {
-        const err = new Error("Only accepted bookings can be completed");
+        const err = new Error(Messages.booking.onlyAcceptedComplete);
         err.status = 409;
         throw err;
       }
@@ -274,14 +275,14 @@ function assertBookingUpdateAllowed(booking, actorId, actorRole, updates) {
     }
 
     if (requestedStatus === "cancelled" && !ACTIVE_BOOKING_STATUSES.has(currentStatus)) {
-      const err = new Error("Only active bookings can be cancelled");
+      const err = new Error(Messages.booking.onlyActiveBookingsCancel);
       err.status = 409;
       throw err;
     }
     return;
   }
 
-  const err = new Error("Forbidden");
+  const err = new Error(Messages.http.forbidden);
   err.status = 403;
   throw err;
 }
@@ -324,13 +325,13 @@ async function deleteBooking(actorId, actorRole, bookingId) {
   const isStaff = actorRole === "admin" || actorRole === "govt_staff";
   const isRenter = String(bookingRenterId(booking)) === String(actorId);
   if (!isStaff && !isRenter) {
-    const err = new Error("Forbidden");
+    const err = new Error(Messages.http.forbidden);
     err.status = 403;
     throw err;
   }
 
   if (!["requested", "cancelled", "rejected"].includes(booking.status) && !isStaff) {
-    const err = new Error("Only requested/cancelled/rejected bookings can be deleted");
+    const err = new Error(Messages.booking.deleteAllowedStatuses);
     err.status = 409;
     throw err;
   }

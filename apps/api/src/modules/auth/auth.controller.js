@@ -13,6 +13,7 @@ const {
   getAccessTokenFromRequest,
   getRefreshTokenFromRequest,
 } = require("./auth.cookies");
+const { Messages } = require("../../constants/errorMessages");
 
 function sanitizeUser(user) {
   return {
@@ -99,7 +100,7 @@ async function refresh(req, res, next) {
     refreshBodySchema.parse(req.body);
     const refreshToken = getRefreshTokenFromRequest(req);
     if (!refreshToken) {
-      return res.status(400).json({ message: "Missing refresh token" });
+      return res.status(400).json({ message: Messages.auth.missingRefreshToken });
     }
 
     const result = await authService.refresh({ refreshToken });

@@ -1,4 +1,5 @@
 const rateLimit = require("express-rate-limit");
+const { Messages } = require("../constants/errorMessages");
 
 function normalizeIdentity(value) {
   if (typeof value !== "string") return "";
@@ -30,7 +31,7 @@ function createLimiter({ windowMs, max, keyGenerator, skipSuccessfulRequests = f
     keyGenerator,
     skipSuccessfulRequests,
     message: {
-      message: message || "Too many requests. Please try again later.",
+      message: message || Messages.rateLimit.default,
     },
   });
 }
@@ -39,14 +40,14 @@ const globalApiLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 600,
   keyGenerator: byIp,
-  message: "Too many API requests from this IP. Please slow down.",
+  message: Messages.rateLimit.api,
 });
 
 const authBurstLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 60,
   keyGenerator: byIp,
-  message: "Too many auth requests. Please try again later.",
+  message: Messages.rateLimit.authBurst,
 });
 
 const loginBruteforceLimiter = createLimiter({
@@ -54,42 +55,42 @@ const loginBruteforceLimiter = createLimiter({
   max: 8,
   keyGenerator: byIpAndCredential,
   skipSuccessfulRequests: true,
-  message: "Too many failed login attempts. Please wait before trying again.",
+  message: Messages.rateLimit.loginBruteforce,
 });
 
 const registerLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   max: 10,
   keyGenerator: byIp,
-  message: "Too many registration attempts. Please try again in an hour.",
+  message: Messages.rateLimit.register,
 });
 
 const refreshLimiter = createLimiter({
   windowMs: 10 * 60 * 1000,
   max: 40,
   keyGenerator: byIp,
-  message: "Too many token refresh requests. Please try again shortly.",
+  message: Messages.rateLimit.refresh,
 });
 
 const bookingMutationLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 80,
   keyGenerator: byUserOrIp,
-  message: "Too many booking changes. Please wait and try again.",
+  message: Messages.rateLimit.bookingMutation,
 });
 
 const ownerCarMutationLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 50,
   keyGenerator: byUserOrIp,
-  message: "Too many listing updates. Please wait and try again.",
+  message: Messages.rateLimit.ownerCarMutation,
 });
 
 const moderationMutationLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 120,
   keyGenerator: byUserOrIp,
-  message: "Too many moderation actions. Please wait and try again.",
+  message: Messages.rateLimit.moderationMutation,
 });
 
 module.exports = {

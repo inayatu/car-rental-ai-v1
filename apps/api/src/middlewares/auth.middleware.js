@@ -1,4 +1,5 @@
 const { verifyAccessToken } = require("../utils/jwt");
+const { Messages } = require("../constants/errorMessages");
 const authService = require("../modules/auth/auth.service");
 const {
   getAccessTokenFromRequest,
@@ -23,26 +24,26 @@ function requireAuth(roles = []) {
       if (!payload) {
         const refreshToken = getRefreshTokenFromRequest(req);
         if (!refreshToken) {
-          return res.status(401).json({ message: "Not authenticated" });
+          return res.status(401).json({ message: Messages.http.notAuthenticated });
         }
         try {
           const result = await authService.refresh({ refreshToken });
           setAuthCookies(res, result.accessToken, result.refreshToken);
           payload = verifyAccessToken(result.accessToken);
         } catch {
-          return res.status(401).json({ message: "Not authenticated" });
+          return res.status(401).json({ message: Messages.http.notAuthenticated });
         }
       }
 
       req.user = payload;
 
       if (roles.length > 0 && !roles.includes(payload.role)) {
-        return res.status(403).json({ message: "Forbidden" });
+        return res.status(403).json({ message: Messages.http.forbidden });
       }
 
       return next();
     } catch (error) {
-      return res.status(401).json({ message: "Invalid or expired token" });
+      return res.status(401).json({ message: Messages.http.invalidOrExpiredToken });
     }
   };
 }

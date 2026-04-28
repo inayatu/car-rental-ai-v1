@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { Messages } = require("../../constants/errorMessages");
 
 const fileUrlSchema = z.string().min(1).refine(
   (value) => {
@@ -13,7 +14,7 @@ const fileUrlSchema = z.string().min(1).refine(
       return false;
     }
   },
-  { message: "Invalid file URL" }
+  { message: Messages.validation.invalidFileUrl }
 );
 
 const carDocumentSchema = z.object({
@@ -49,7 +50,7 @@ const createCarSchema = z.object({
 
 const updateCarSchema = createCarSchema.partial().refine(
   (value) => Object.keys(value).length > 0,
-  { message: "At least one field is required for update." }
+  { message: Messages.validation.updateRequiresOneField }
 );
 
 const carIdParamsSchema = z.object({

@@ -1,5 +1,6 @@
 const dotenv = require("dotenv");
 const { z } = require("zod");
+const { Messages } = require("../constants/errorMessages");
 
 dotenv.config();
 
@@ -48,7 +49,7 @@ const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
   const issues = parsedEnv.error.issues.map((issue) => issue.message).join("; ");
-  throw new Error(`Invalid environment configuration: ${issues}`);
+  throw new Error(Messages.config.invalidEnvironment(issues));
 }
 
 const rawEnv = parsedEnv.data;
@@ -62,7 +63,7 @@ function buildMongoUri() {
   const hasPassword = Boolean(rawEnv.MONGO_PASSWORD);
 
   if (hasUser !== hasPassword) {
-    throw new Error("MONGO_USER and MONGO_PASSWORD must be provided together.");
+    throw new Error(Messages.config.mongoUserPasswordTogether);
   }
 
   const credentials = hasUser

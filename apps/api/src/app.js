@@ -8,6 +8,7 @@ const logger = require("./utils/logger");
 const connectDB = require("./config/db");
 const env = require("./config/env");
 const registerRoutes = require("./routes");
+const { Messages } = require("./constants/errorMessages");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -58,14 +59,14 @@ app.use((error, _req, res, _next) => {
 
   if (error && error.name === "ZodError") {
     return res.status(400).json({
-      message: "Validation error",
+      message: Messages.http.validationError,
       errors: error.issues,
     });
   }
 
   const status = error.status || 500;
   return res.status(status).json({
-    message: error.message || "Internal server error",
+    message: error.message || Messages.http.internalServerError,
   });
 });
 

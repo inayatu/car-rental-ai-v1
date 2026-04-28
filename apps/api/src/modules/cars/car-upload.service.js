@@ -3,6 +3,7 @@ const path = require("path");
 const sharp = require("sharp");
 const { randomUUID } = require("crypto");
 const env = require("../../config/env");
+const { Messages } = require("../../constants/errorMessages");
 
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const DOCUMENT_TYPES = new Set(["application/pdf"]);
@@ -56,7 +57,7 @@ function parseDocumentTypes(documentTypesRaw) {
 
 async function processImage(file) {
   if (!IMAGE_TYPES.has(file.mimetype)) {
-    const err = new Error(`Unsupported image type: ${file.mimetype}`);
+    const err = new Error(Messages.upload.unsupportedImageType(file.mimetype));
     err.status = 400;
     throw err;
   }
@@ -84,7 +85,7 @@ async function processImage(file) {
 
 function processDocument(file, docType) {
   if (!DOCUMENT_TYPES.has(file.mimetype)) {
-    const err = new Error(`Unsupported document type: ${file.mimetype}. Only PDF allowed.`);
+    const err = new Error(Messages.upload.unsupportedDocumentType(file.mimetype));
     err.status = 400;
     throw err;
   }

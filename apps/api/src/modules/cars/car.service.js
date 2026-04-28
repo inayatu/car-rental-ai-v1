@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Car = require("./car.model");
+const { Messages, invalidField } = require("../../constants/errorMessages");
 
 const MODERATION_ACTIONS = {
   VERIFY: "verify",
@@ -9,7 +10,7 @@ const MODERATION_ACTIONS = {
 
 function ensureValidObjectId(id, fieldName = "id") {
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error(`Invalid ${fieldName}`);
+    const err = new Error(invalidField(fieldName));
     err.status = 400;
     throw err;
   }
@@ -57,7 +58,7 @@ async function getOwnerCarById(ownerId, carId) {
   const car = await Car.findOne({ _id: carId, ownerId });
 
   if (!car) {
-    const err = new Error("Car not found");
+    const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;
   }
@@ -103,12 +104,12 @@ async function updateOwnerCar(ownerId, carId, updates) {
   const car = await Car.findOne({ _id: carId, ownerId });
 
   if (!car) {
-    const err = new Error("Car not found");
+    const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;
   }
   if (car.isDeleted) {
-    const err = new Error("This listing was removed. Restore it before editing.");
+    const err = new Error(Messages.car.listingRemovedRestoreFirst);
     err.status = 400;
     throw err;
   }
@@ -137,7 +138,7 @@ async function deleteOwnerCar(ownerId, carId) {
     { new: true }
   );
   if (!updated) {
-    const err = new Error("Car not found or already removed");
+    const err = new Error(Messages.car.notFoundOrAlreadyRemoved);
     err.status = 404;
     throw err;
   }
@@ -154,7 +155,7 @@ async function restoreOwnerCar(ownerId, carId) {
     { new: true }
   );
   if (!car) {
-    const err = new Error("Car not found or not removed");
+    const err = new Error(Messages.car.notFoundOrNotRemoved);
     err.status = 404;
     throw err;
   }
@@ -173,19 +174,19 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
   ensureValidObjectId(moderatorId, "moderator id");
 
   if (!Object.values(MODERATION_ACTIONS).includes(action)) {
-    const err = new Error("Invalid moderation action");
+    const err = new Error(Messages.car.invalidModerationAction);
     err.status = 400;
     throw err;
   }
 
   const car = await Car.findById(carId);
   if (!car) {
-    const err = new Error("Car not found");
+    const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;
   }
   if (car.isDeleted) {
-    const err = new Error("This listing is no longer active");
+    const err = new Error(Messages.car.listingNoLongerActive);
     err.status = 404;
     throw err;
   }
@@ -197,7 +198,7 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
     (action === MODERATION_ACTIONS.UNVERIFY || action === MODERATION_ACTIONS.BLACKLIST) &&
     !reason
   ) {
-    const err = new Error("Reason is required for unverify/blacklist actions");
+    const err = new Error(Messages.car.reasonRequiredUnverifyBlacklist);
     err.status = 400;
     throw err;
   }
@@ -327,7 +328,7 @@ async function getPublicCarById(id) {
     .exec();
 
   if (!car) {
-    const err = new Error("Car not found");
+    const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;
   }

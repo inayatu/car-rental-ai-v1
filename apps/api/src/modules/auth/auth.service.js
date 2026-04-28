@@ -5,6 +5,7 @@ const {
   signRefreshToken,
   verifyRefreshToken,
 } = require("../../utils/jwt");
+const { Messages } = require("../../constants/errorMessages");
 
 const SELF_REGISTER_ALLOWED_ROLES = new Set(["renter", "owner"]);
 
@@ -26,7 +27,7 @@ async function register(input) {
   const userRole = role || "renter";
 
   if (!SELF_REGISTER_ALLOWED_ROLES.has(userRole)) {
-    const err = new Error("Invalid role for self registration");
+    const err = new Error(Messages.auth.invalidRoleSelfRegistration);
     err.status = 403;
     throw err;
   }
@@ -36,7 +37,7 @@ async function register(input) {
   });
 
   if (exists) {
-    const err = new Error("User already exists with email or phone");
+    const err = new Error(Messages.auth.userAlreadyExists);
     err.status = 409;
     throw err;
   }
@@ -66,14 +67,14 @@ async function login(input) {
   });
 
   if (!user) {
-    const err = new Error("Invalid credentials");
+    const err = new Error(Messages.auth.invalidCredentials);
     err.status = 401;
     throw err;
   }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
-    const err = new Error("Invalid credentials");
+    const err = new Error(Messages.auth.invalidCredentials);
     err.status = 401;
     throw err;
   }
@@ -92,14 +93,14 @@ async function refresh(input) {
   try {
     decoded = verifyRefreshToken(refreshToken);
   } catch (_error) {
-    const err = new Error("Invalid refresh token");
+    const err = new Error(Messages.auth.invalidRefreshToken);
     err.status = 401;
     throw err;
   }
 
   const user = await User.findById(decoded.sub);
   if (!user || !user.refreshTokens.includes(refreshToken)) {
-    const err = new Error("Refresh token not recognized");
+    const err = new Error(Messages.auth.refreshTokenNotRecognized);
     err.status = 401;
     throw err;
   }
