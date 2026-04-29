@@ -6,6 +6,7 @@ import { FormGroup } from "../components/ui/FormGroup.jsx";
 import { Alert } from "../components/ui/Alert.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { afterLoginPath, PATH } from "../lib/paths.js";
+import { BRAND } from "../lib/brand.js";
 
 export function PageAuth() {
   const { login, register, getError } = useAuth();
@@ -113,13 +114,13 @@ export function PageAuth() {
               lineHeight: 1.05,
             }}
           >
-            Your <em style={{ color: "var(--gold2)" }}>GB adventure</em>
+            Your <em style={{ color: "var(--gold2)" }}>Gilgit Baltistan</em> adventure
             <br />
             starts here
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, marginBottom: "2rem" }}>
-            Create a free account to book vehicles, manage your trips, or list your own car for rental. Uses the live API
-            (JWT access + refresh tokens).
+            Create a free account on {BRAND.domain} to book vehicles, manage trips, or list your car for travellers visiting
+            the region.
           </p>
         </div>
       </div>

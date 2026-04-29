@@ -4,6 +4,7 @@ import { Alert } from "../components/ui/Alert.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
 import { Btn } from "../components/ui/Btn.jsx";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
+import { BRAND } from "../lib/brand.js";
 
 const allBookings = [
   { id: "#BK-001", renter: "Ali Khan", owner: "Imran Ali", car: "Toyota Prado", dest: "Hunza", dates: "28Apr-2May", amount: 27000, status: "confirmed", paid: "Pending" },
@@ -37,7 +38,7 @@ export function PageAdmin() {
         }}
       >
         <div style={{ padding: "1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "#fff" }}>GB Trails</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "#fff" }}>{BRAND.domain}</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Admin Dashboard</div>
         </div>
         <nav style={{ padding: "0.8rem" }}>
@@ -78,7 +79,7 @@ export function PageAdmin() {
           >
             Platform Overview
           </h1>
-          <p style={{ fontSize: 13, color: "var(--ink4)", marginTop: 4 }}>Admin · GB Trails</p>
+          <p style={{ fontSize: 13, color: "var(--ink4)", marginTop: 4 }}>Admin · {BRAND.domain}</p>
         </div>
 
         <div

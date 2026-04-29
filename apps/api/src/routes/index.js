@@ -6,6 +6,7 @@ const carRoutes = require("../modules/cars/car.routes");
 const bookingRoutes = require("../modules/bookings/booking.routes");
 const openApiSpec = require("../docs/openapi");
 const env = require("../config/env");
+const brand = require("../constants/brand");
 
 function registerRoutes(app) {
   app.use(
@@ -14,7 +15,7 @@ function registerRoutes(app) {
   );
 
   app.get("/health", (_req, res) => {
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, service: `${brand.domain}-api` });
   });
 
   app.get("/api/docs.json", (_req, res) => {

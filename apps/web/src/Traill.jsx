@@ -106,7 +106,7 @@ function AppShell({ auth, onLogout, children }) {
       <header className="topbar">
         <Link to="/" className="brand">
           <HeartHandshake size={18} />
-          <span>RentNova</span>
+          <span>gbtrip.pk</span>
         </Link>
         <nav className="top-actions">
           {!auth?.user ? (

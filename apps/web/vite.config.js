@@ -9,9 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "RentNova - Car & Hotel Rentals",
-        short_name: "RentNova",
-        description: "Mobile-first platform for discovering and managing car and hotel bookings.",
+        name: "gbtrip.pk — Car rentals · Gilgit Baltistan",
+        short_name: "GB Trip",
+        description:
+          "Book verified cars, jeeps, and SUVs from trusted local owners across Gilgit Baltistan.",
         theme_color: "#1a33b3",
         background_color: "#f3f5fb",
         display: "standalone",

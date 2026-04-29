@@ -11,6 +11,7 @@ import { Stars } from "../components/ui/Stars.jsx";
 import { api } from "../lib/apiClient.js";
 import { mapApiCarToDisplay } from "../lib/carMappers.js";
 import { PATH } from "../lib/paths.js";
+import { BRAND } from "../lib/brand.js";
 
 const tickerText = [
   "Hunza Valley",
@@ -137,7 +138,7 @@ export function PageHome() {
                     animation: "pulse 2s infinite",
                   }}
                 />
-                Gilgit Baltistan Tourism Platform
+                Gilgit Baltistan · {BRAND.domain}
               </div>
               <h1
                 style={{
@@ -165,7 +166,8 @@ export function PageHome() {
                   marginBottom: "2rem",
                 }}
               >
-                Verified cars, jeeps, and SUVs from trusted local owners. From Hunza to Skardu — book instantly, pay locally.
+                Verified cars, jeeps, and SUVs from trusted local owners on {BRAND.domain}. From Hunza to Skardu — request online,
+                pay locally.
               </p>
               <div style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap" }}>
                 <Btn variant="gold" size="lg" onClick={() => navigate(PATH.listings)}>
@@ -329,7 +331,7 @@ export function PageHome() {
 
       <section style={{ padding: "5rem 0", background: "var(--white)" }}>
         <div className="gb-wrap-1200">
-          <Eyebrow>Why GB Trails</Eyebrow>
+          <Eyebrow>Why {BRAND.domain}</Eyebrow>
           <SectionTitle>
             Travel smarter, <em style={{ color: "var(--teal)", fontStyle: "italic" }}>safer, and further</em>
           </SectionTitle>
@@ -543,7 +545,7 @@ export function PageHome() {
                 "SB",
                 "Sara Baig",
                 "Islamabad · August 2024",
-                "Rented a Jimny for Deosai. The owner knew every track and gave us a detailed route briefing. GB Trails made it effortless.",
+                `Rented a Jimny for Deosai. The owner knew every track and gave us a detailed route briefing. Booking through ${BRAND.domain} was effortless.`,
               ],
               [
                 "MR",
@@ -613,7 +615,7 @@ export function PageHome() {
             Own a vehicle? Start earning today.
           </h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.8)", marginBottom: "2rem" }}>
-            List your car or jeep on GB Trails and connect with thousands of tourists every season.
+            List your car or jeep on {BRAND.domain} and reach travellers every season.
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
             <Btn variant="gold" size="lg" onClick={() => navigate(PATH.login)}>

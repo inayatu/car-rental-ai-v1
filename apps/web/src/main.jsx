@@ -5,7 +5,6 @@ import { injectGlobalStyles } from "./theme/injectGlobalStyles";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import App from "./App.jsx";
-// import Trail from "./trail.jsx";
 import "./index.css";
 
 injectGlobalStyles();

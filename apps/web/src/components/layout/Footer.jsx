@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { PATH } from "../../lib/paths.js";
+import { BRAND } from "../../lib/brand.js";
+import { BrandWordmark } from "../brand/BrandWordmark.jsx";
 
 const LINK_GROUPS = [
   [
@@ -56,10 +58,10 @@ export function Footer() {
         >
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: "0.8rem" }}>
-              GB <span style={{ color: "var(--gold2)", fontStyle: "italic" }}>Trails</span>
+              <BrandWordmark withEmoji={false} />
             </div>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
-              Verified vehicles, local owners, extraordinary journeys across Gilgit Baltistan.
+              Verified vehicles and local owners across Gilgit Baltistan — book on {BRAND.domain}.
             </p>
           </div>
           {LINK_GROUPS.map(([heading, links]) => (
@@ -110,7 +112,9 @@ export function Footer() {
             gap: "1rem",
           }}
         >
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>© 2024 GB Trails. All rights reserved. Gilgit Baltistan, Pakistan.</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
+            © {BRAND.copyrightYear} {BRAND.domain}. All rights reserved. Gilgit Baltistan, Pakistan.
+          </span>
           <div style={{ display: "flex", gap: "0.7rem" }}>
             {["🔐 Govt. Verified", "🇵🇰 Made in GB"].map((b) => (
               <span

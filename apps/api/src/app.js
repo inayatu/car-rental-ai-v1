@@ -9,6 +9,7 @@ const connectDB = require("./config/db");
 const env = require("./config/env");
 const registerRoutes = require("./routes");
 const { Messages } = require("./constants/errorMessages");
+const brand = require("./constants/brand");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -74,9 +75,10 @@ async function start() {
   await connectDB();
 
   app.listen(env.port, () => {
-    logger.info(`API running on http://localhost:${env.port}`, {
+    logger.info(`${brand.apiName} · http://localhost:${env.port}`, {
       env: env.nodeEnv,
       logLevel: env.logLevel,
+      domain: brand.domain,
     });
   });
 }

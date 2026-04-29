@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Btn } from "../ui/Btn.jsx";
+import { BrandWordmark } from "../brand/BrandWordmark.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { dashboardPathForUser, pathIs, PATH } from "../../lib/paths.js";
 
@@ -81,8 +82,7 @@ export function Nav() {
               minWidth: 0,
             }}
           >
-            <span style={{ fontSize: "clamp(1rem, 3.5vw, 1.15rem)", flexShrink: 0 }}>🏔</span>
-            GB <span style={{ color: "var(--gold2)", fontStyle: "italic" }}>Trails</span>
+            <BrandWordmark />
           </div>
 
           <div className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: "2.2rem" }}>
@@ -208,7 +208,7 @@ export function Nav() {
           }}
         >
           <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "#fff" }}>
-            GB <span style={{ color: "var(--gold2)", fontStyle: "italic" }}>Trails</span>
+            <BrandWordmark withEmoji={false} />
           </div>
           <button
             type="button"

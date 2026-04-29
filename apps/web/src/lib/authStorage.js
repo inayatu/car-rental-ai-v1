@@ -1,5 +1,5 @@
-const KEY_ACCESS = "gbtrails_access_token";
-const KEY_REFRESH = "gbtrails_refresh_token";
+const KEY_ACCESS = "gbtrip_access_token";
+const KEY_REFRESH = "gbtrip_refresh_token";
 
 export function getStoredTokens() {
   try {

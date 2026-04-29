@@ -1,4 +1,4 @@
-# RentNova Web (PWA)
+# gbtrip.pk Web (PWA)
 
 Mobile-first React PWA for car and hotel rentals.
 

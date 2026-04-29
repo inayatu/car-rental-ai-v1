@@ -229,7 +229,7 @@ export function injectGlobalStyles() {
   if (injected) return;
   injected = true;
   const el = document.createElement("style");
-  el.setAttribute("data-gb-trails", "1");
+  el.setAttribute("data-gbtrip-pk", "1");
   el.textContent = CSS;
   document.head.appendChild(el);
 }

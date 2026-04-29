@@ -1,22 +1,24 @@
 const env = require("../config/env");
+const brand = require("../constants/brand");
 
 const apiBaseUrl =
-  env.nodeEnv === "production"
-    ? "https://api.example.com"
-    : `http://localhost:${env.port}`;
+  env.nodeEnv === "production" ? brand.productionApiOrigin : `http://localhost:${env.port}`;
 
 const openApiSpec = {
   openapi: "3.0.3",
   info: {
-    title: "Car Rental AI API",
+    title: brand.apiName,
     version: "1.0.0",
-    description:
-      "API documentation for auth, owner car management, and admin/govt moderation workflows.",
+    description: brand.openapiDescription,
+    contact: {
+      name: brand.domain,
+      url: `https://${brand.domain}`,
+    },
   },
   servers: [
     {
       url: apiBaseUrl,
-      description: "Current environment",
+      description: env.nodeEnv === "production" ? "Production API" : "Local development",
     },
   ],
   tags: [
@@ -343,7 +345,10 @@ const openApiSpec = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { ok: { type: "boolean", example: true } },
+                  properties: {
+                    ok: { type: "boolean", example: true },
+                    service: { type: "string", example: "gbtrip.pk-api" },
+                  },
                 },
               },
             },
