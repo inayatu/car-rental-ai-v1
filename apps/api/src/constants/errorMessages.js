@@ -62,7 +62,8 @@ const Messages = {
     notFoundOrNotRemoved: "Car not found or not removed",
     invalidModerationAction: "Invalid moderation action",
     listingNoLongerActive: "This listing is no longer active",
-    reasonRequiredUnverifyBlacklist: "Reason is required for unverify/blacklist actions",
+    reasonRequiredUnverifyBlacklist:
+      "Reason is required for unverify, blacklist, and remove-blacklist actions",
     notBlacklisted: "This listing is not blacklisted",
   },
 
