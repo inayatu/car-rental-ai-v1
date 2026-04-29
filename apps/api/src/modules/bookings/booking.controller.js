@@ -99,7 +99,7 @@ function sanitizeBooking(booking, actorId, actorRole) {
     }
   }
   if (
-    exposeHost &&
+    (exposeHost || flags.isStaff) &&
     booking.ownerId &&
     typeof booking.ownerId === "object" &&
     ("name" in booking.ownerId || "email" in booking.ownerId || "phone" in booking.ownerId)
@@ -176,4 +176,5 @@ module.exports = {
   getBookingById,
   updateBooking,
   deleteBooking,
+  sanitizeBooking,
 };

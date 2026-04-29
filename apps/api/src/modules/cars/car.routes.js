@@ -24,6 +24,8 @@ router.post(
 );
 router.get("/mine", requireAuth(["owner"]), carController.listMyCars);
 
+router.get("/admin/all", requireAuth(["admin", "govt_staff"]), carController.listAllCarsAdmin);
+
 router.get(
   "/moderation/pending",
   requireAuth(["admin", "govt_staff"]),
@@ -46,6 +48,12 @@ router.post(
   requireAuth(["admin", "govt_staff"]),
   moderationMutationLimiter,
   carController.blacklistCar
+);
+router.post(
+  "/:id/unblacklist",
+  requireAuth(["admin", "govt_staff"]),
+  moderationMutationLimiter,
+  carController.unblacklistCar
 );
 router.get("/:id", requireAuth(["owner"]), carController.getMyCarById);
 router.patch(

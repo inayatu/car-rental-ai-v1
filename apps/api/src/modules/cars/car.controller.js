@@ -137,6 +137,7 @@ function sanitizePublicCar(car) {
     car.ownerId && typeof car.ownerId === "object" && car.ownerId.name
       ? car.ownerId.name
       : null;
+  const blacklisted = car.verification?.status === "blacklisted";
   return {
     id: car._id,
     title: car.title,
@@ -153,7 +154,11 @@ function sanitizePublicCar(car) {
     description: car.description,
     images: Array.isArray(car.images) ? car.images.slice(0, 5) : car.images,
     ownerName,
-    verification: { verifiedBadge: car.verification?.verifiedBadge },
+    blacklisted,
+    verification: {
+      verifiedBadge: !!car.verification?.verifiedBadge && !blacklisted,
+      status: blacklisted ? "blacklisted" : "verified",
+    },
   };
 }
 
@@ -230,6 +235,24 @@ async function listMyCars(req, res, next) {
     const includeDeleted = String(req.query?.includeDeleted || "") === "1" || String(req.query?.includeDeleted) === "true";
     const cars = await carService.listOwnerCars(req.user.sub, { includeDeleted });
     return res.status(200).json({ cars: cars.map(sanitizeCar) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function listAllCarsAdmin(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const { items, total, page: p, limit: l } = await carService.listAllCarsAdmin({ page, limit });
+    const totalPages = total === 0 ? 0 : Math.ceil(total / l);
+    return res.status(200).json({
+      cars: items.map(sanitizeCar),
+      page: p,
+      limit: l,
+      total,
+      totalPages,
+    });
   } catch (error) {
     return next(error);
   }
@@ -337,11 +360,30 @@ async function blacklistCar(req, res, next) {
   }
 }
 
+async function unblacklistCar(req, res, next) {
+  try {
+    const { id } = carIdParamsSchema.parse(req.params);
+    const payload = moderateCarSchema.parse(req.body || {});
+    const car = await carService.moderateCar(
+      id,
+      req.user.sub,
+      req.user.role,
+      carService.MODERATION_ACTIONS.UNBLACKLIST,
+      payload
+    );
+    return res.status(200).json({ car: sanitizeCar(car) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   listPublicCars,
   getPublicCarById,
   createCar,
   listMyCars,
+  listAllCarsAdmin,
+  sanitizeCar,
   getMyCarById,
   updateMyCar,
   deleteMyCar,
@@ -350,4 +392,5 @@ module.exports = {
   verifyCar,
   unverifyCar,
   blacklistCar,
+  unblacklistCar,
 };

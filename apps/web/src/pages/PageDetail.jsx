@@ -90,6 +90,10 @@ export function PageDetail() {
       setBookErr("Only renter accounts can create bookings. Log in with a renter account.");
       return;
     }
+    if (raw?.blacklisted === true || raw?.verification?.status === "blacklisted") {
+      setBookErr("This listing is blacklisted and cannot be booked.");
+      return;
+    }
     if (!pickDate || !retDate) {
       setBookErr("Please choose pick-up and return dates.");
       return;
@@ -182,8 +186,10 @@ export function PageDetail() {
     .filter(Boolean)
     .slice(0, 4);
 
+  const isBlacklisted = raw?.blacklisted === true || raw?.verification?.status === "blacklisted";
   const isAvailable =
-    display.status === "available" || display.status === "active" || display.status == null || display.status === "";
+    !isBlacklisted &&
+    (display.status === "available" || display.status === "active" || display.status == null || display.status === "");
 
   return (
     <div>
@@ -238,9 +244,15 @@ export function PageDetail() {
                   pointerEvents: "none",
                 }}
               >
-                {isAvailable ? <span className="car-card-available-badge">Available</span> : <Badge variant="red">Unavailable</Badge>}
+                {isBlacklisted ? (
+                  <Badge variant="gold">Blacklisted · not bookable</Badge>
+                ) : isAvailable ? (
+                  <span className="car-card-available-badge">Available</span>
+                ) : (
+                  <Badge variant="red">Unavailable</Badge>
+                )}
               </div>
-              {raw?.verification?.verifiedBadge && (
+              {!isBlacklisted && raw?.verification?.verifiedBadge && (
                 <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2, pointerEvents: "none" }}>
                   <Badge variant="green">✓ Verified</Badge>
                 </div>
@@ -291,18 +303,34 @@ export function PageDetail() {
               }}
             >
               <div>
-                <h1
+                <div
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "clamp(1.35rem, 4.5vw, 2rem)",
-                    fontWeight: 700,
-                    letterSpacing: "-0.5px",
-                    lineHeight: 1.2,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "0.5rem 0.75rem",
                   }}
                 >
-                  {display.name}
-                </h1>
+                  <h1
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "clamp(1.35rem, 4.5vw, 2rem)",
+                      fontWeight: 700,
+                      letterSpacing: "-0.5px",
+                      lineHeight: 1.2,
+                      margin: 0,
+                    }}
+                  >
+                    {display.name}
+                  </h1>
+                  {isBlacklisted && <Badge variant="gold">Blacklisted</Badge>}
+                </div>
                 <div style={{ fontSize: 13, color: "var(--ink4)", marginTop: 4 }}>📍 {display.loc}</div>
+                {isBlacklisted && (
+                  <p style={{ fontSize: 13, color: "var(--ink3)", margin: "6px 0 0", fontWeight: 500 }}>
+                    This vehicle is blacklisted by moderators and cannot be booked.
+                  </p>
+                )}
               </div>
               <div style={{ textAlign: "right" }}>
                 <Stars n={5} />
@@ -362,7 +390,12 @@ export function PageDetail() {
                   {f}
                 </Badge>
               ))}
-              {raw?.verification?.verifiedBadge && <Badge variant="green">✓ Platform verified</Badge>}
+              {!isBlacklisted && raw?.verification?.verifiedBadge && (
+                <Badge variant="green">✓ Platform verified</Badge>
+              )}
+              {isBlacklisted && (
+                <Badge variant="gold">Moderation: blacklisted — booking disabled</Badge>
+              )}
             </div>
 
             <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
@@ -413,8 +446,9 @@ export function PageDetail() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{display.ownerName || "Local owner"}</div>
                 <div style={{ fontSize: 11, color: "var(--ink4)", marginTop: 2 }}>{display.loc}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 5 }}>
-                  {raw?.verification?.verifiedBadge && <Badge variant="green">✓ Verified</Badge>}
+                <div style={{ display: "flex", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                  {!isBlacklisted && raw?.verification?.verifiedBadge && <Badge variant="green">✓ Verified</Badge>}
+                  {isBlacklisted && <Badge variant="gold">Blacklisted listing</Badge>}
                 </div>
               </div>
             </div>
@@ -422,6 +456,12 @@ export function PageDetail() {
 
           <div className="gb-detail-sticky" style={{ minWidth: 0 }}>
             <Card style={{ padding: "1.5rem" }}>
+              {isBlacklisted && (
+                <Alert type="warn">
+                  This vehicle is listed for transparency but <strong>cannot be booked</strong> — moderators have marked it
+                  blacklisted.
+                </Alert>
+              )}
               <div
                 style={{
                   fontFamily: "var(--font-display)",
@@ -447,6 +487,7 @@ export function PageDetail() {
                   type="date"
                   min={todayIso}
                   value={pickDate}
+                  disabled={isBlacklisted}
                   onChange={(e) => {
                     const nextPick = e.target.value;
                     setPickDate(nextPick);
@@ -457,7 +498,13 @@ export function PageDetail() {
                 />
               </FormGroup>
               <FormGroup label="Return Date">
-                <input type="date" min={returnMinDate} value={retDate} onChange={(e) => setRetDate(e.target.value)} />
+                <input
+                  type="date"
+                  min={returnMinDate}
+                  value={retDate}
+                  disabled={isBlacklisted}
+                  onChange={(e) => setRetDate(e.target.value)}
+                />
               </FormGroup>
               <div
                 style={{
@@ -475,6 +522,7 @@ export function PageDetail() {
                   type="text"
                   autoComplete="name"
                   value={renterName}
+                  disabled={isBlacklisted}
                   onChange={(e) => setRenterName(e.target.value)}
                   placeholder="As on your ID / contact"
                 />
@@ -484,6 +532,7 @@ export function PageDetail() {
                   type="tel"
                   autoComplete="tel"
                   value={renterPhone}
+                  disabled={isBlacklisted}
                   onChange={(e) => setRenterPhone(e.target.value)}
                   placeholder="e.g. 03xx…"
                 />
@@ -493,6 +542,7 @@ export function PageDetail() {
                   type="email"
                   autoComplete="email"
                   value={renterEmail}
+                  disabled={isBlacklisted}
                   onChange={(e) => setRenterEmail(e.target.value)}
                 />
               </FormGroup>
@@ -502,6 +552,7 @@ export function PageDetail() {
                   min={1}
                   max={50}
                   value={numberOfPersons}
+                  disabled={isBlacklisted}
                   onChange={(e) => {
                     const n = parseInt(e.target.value, 10);
                     setNumberOfPersons(Number.isNaN(n) ? 1 : Math.min(50, Math.max(1, n)));
@@ -512,6 +563,7 @@ export function PageDetail() {
                 <textarea
                   rows={3}
                   value={renterNotes}
+                  disabled={isBlacklisted}
                   onChange={(e) => setRenterNotes(e.target.value)}
                   placeholder="Pick-up time, child seat, route, or other requests"
                   style={{ width: "100%", resize: "vertical", minHeight: 72, font: "inherit" }}
@@ -524,8 +576,14 @@ export function PageDetail() {
               )}
               {bookErr && <Alert type="error">{bookErr}</Alert>}
               {bookMsg && <Alert type="success">{bookMsg}</Alert>}
-              <Btn variant="gold" block size="lg" onClick={requestBooking} disabled={submitting}>
-                {isAuthenticated ? (submitting ? "Sending…" : "Request to book") : "Log in to book"}
+              <Btn variant="gold" block size="lg" onClick={requestBooking} disabled={submitting || isBlacklisted}>
+                {isBlacklisted
+                  ? "Booking disabled"
+                  : isAuthenticated
+                    ? submitting
+                      ? "Sending…"
+                      : "Request to book"
+                    : "Log in to book"}
               </Btn>
               <p
                 style={{

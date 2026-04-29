@@ -42,6 +42,7 @@ const Messages = {
     overlappingDates: "Car is already booked for overlapping dates",
     ownerCannotBookOwnCar: "Owner cannot create booking on own car",
     carNotAvailable: "Car is not available for booking",
+    carBlacklisted: "This listing is blacklisted and cannot be booked",
     carNotVerifiedForBooking: "Car is not verified for booking",
     notFound: "Booking not found",
     statusRequired: "status is required",
@@ -62,6 +63,7 @@ const Messages = {
     invalidModerationAction: "Invalid moderation action",
     listingNoLongerActive: "This listing is no longer active",
     reasonRequiredUnverifyBlacklist: "Reason is required for unverify/blacklist actions",
+    notBlacklisted: "This listing is not blacklisted",
   },
 
   upload: {

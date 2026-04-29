@@ -30,6 +30,11 @@ const openApiSpec = {
       name: "Car Moderation",
       description: "Admin/govt staff verification and moderation endpoints",
     },
+    {
+      name: "Admin",
+      description:
+        "Staff console: aggregates, user directory, booking catalog, and vehicle inventory (requires admin or govt_staff JWT). Prefer these paths over ad-hoc queries.",
+    },
   ],
   components: {
     securitySchemes: {
@@ -956,6 +961,178 @@ const openApiSpec = {
         responses: {
           200: { description: "Car blacklisted" },
           400: { description: "Reason required" },
+        },
+      },
+    },
+    "/api/v1/admin/stats": {
+      get: {
+        tags: ["Admin"],
+        summary: "Dashboard aggregates",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Counts and quoted booking volume",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    bookingsTotal: { type: "integer" },
+                    usersTotal: { type: "integer" },
+                    vehiclesTotal: { type: "integer" },
+                    bookingsActive: { type: "integer" },
+                    pendingModeration: { type: "integer" },
+                    quotedVolumeTotal: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/bookings": {
+      get: {
+        tags: ["Admin"],
+        summary: "List all bookings (paginated)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 50 } },
+          {
+            name: "status",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["requested", "accepted", "rejected", "cancelled", "completed"],
+            },
+          },
+        ],
+        responses: {
+          200: { description: "Paginated bookings" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/bookings/{id}": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get one booking (staff view)",
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "Booking detail" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Not found" },
+        },
+      },
+    },
+    "/api/v1/admin/vehicles": {
+      get: {
+        tags: ["Admin"],
+        summary: "List all vehicles (paginated)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 50 } },
+        ],
+        responses: {
+          200: { description: "Paginated cars" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/vehicles/pending-moderation": {
+      get: {
+        tags: ["Admin"],
+        summary: "Cars awaiting verification (same data as GET /api/v1/cars/moderation/pending)",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Cars pending moderation" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/vehicles/{id}": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get one vehicle (full listing including images, documents, moderation history)",
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "Vehicle detail" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Not found" },
+        },
+      },
+    },
+    "/api/v1/admin/users": {
+      get: {
+        tags: ["Admin"],
+        summary: "List users (paginated)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 50 } },
+        ],
+        responses: {
+          200: { description: "Paginated users without secrets" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/users/{id}": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get user by id",
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "User without secrets" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Not found" },
+        },
+      },
+      patch: {
+        tags: ["Admin"],
+        summary: "Update role (admin only) or verification status",
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  role: {
+                    type: "string",
+                    enum: ["renter", "owner", "admin", "govt_staff"],
+                  },
+                  verificationStatus: {
+                    type: "string",
+                    enum: ["pending", "under_review", "verified", "rejected"],
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Updated user" },
+          400: { description: "Validation error" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden — role changes require admin" },
+          404: { description: "Not found" },
         },
       },
     },

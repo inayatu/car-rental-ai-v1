@@ -6,6 +6,7 @@ const MODERATION_ACTIONS = {
   VERIFY: "verify",
   UNVERIFY: "unverify",
   BLACKLIST: "blacklist",
+  UNBLACKLIST: "unblacklist",
 };
 
 function ensureValidObjectId(id, fieldName = "id") {
@@ -166,7 +167,9 @@ async function listPendingModerationCars() {
   return Car.find({
     "verification.status": { $in: ["pending", "unverified"] },
     isDeleted: { $ne: true },
-  }).sort({ createdAt: -1 });
+  })
+    .sort({ createdAt: -1 })
+    .populate("ownerId", "name email phone");
 }
 
 async function moderateCar(carId, moderatorId, moderatorRole, action, payload = {}) {
@@ -195,12 +198,22 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
   const reason = payload.reason || payload.notes;
 
   if (
-    (action === MODERATION_ACTIONS.UNVERIFY || action === MODERATION_ACTIONS.BLACKLIST) &&
+    (action === MODERATION_ACTIONS.UNVERIFY ||
+      action === MODERATION_ACTIONS.BLACKLIST ||
+      action === MODERATION_ACTIONS.UNBLACKLIST) &&
     !reason
   ) {
     const err = new Error(Messages.car.reasonRequiredUnverifyBlacklist);
     err.status = 400;
     throw err;
+  }
+
+  if (action === MODERATION_ACTIONS.UNBLACKLIST) {
+    if (car.verification?.status !== "blacklisted") {
+      const err = new Error(Messages.car.notBlacklisted);
+      err.status = 400;
+      throw err;
+    }
   }
 
   if (action === MODERATION_ACTIONS.VERIFY) {
@@ -224,11 +237,29 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
     car.status = "paused";
   }
 
+  if (action === MODERATION_ACTIONS.UNBLACKLIST) {
+    car.verification.status = "verified";
+    car.verification.verifiedBadge = true;
+    car.verification.verifiedAt = now;
+    car.verification.verifiedBy = moderatorId;
+    car.verification.notes = payload.notes || reason || "Blacklist removed by moderator; listing restored.";
+    car.status = "active";
+  }
+
   car.verification.lastActionAt = now;
   car.verification.lastActionBy = moderatorId;
   car.verification.lastActionByRole = moderatorRole;
+
+  const historyActionMap = {
+    [MODERATION_ACTIONS.VERIFY]: "verified",
+    [MODERATION_ACTIONS.UNVERIFY]: "unverified",
+    [MODERATION_ACTIONS.BLACKLIST]: "blacklisted",
+    [MODERATION_ACTIONS.UNBLACKLIST]: "unblacklisted",
+  };
+  const historyAction = historyActionMap[action];
+
   car.moderationHistory.push({
-    action: action === MODERATION_ACTIONS.VERIFY ? "verified" : action,
+    action: historyAction,
     by: moderatorId,
     byRole: moderatorRole,
     reason,
@@ -237,6 +268,26 @@ async function moderateCar(carId, moderatorId, moderatorRole, action, payload = 
 
   await car.save();
   return car;
+}
+
+async function listAllCarsAdmin(options = {}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 50));
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+  const [items, total] = await Promise.all([
+    Car.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("ownerId", "name email phone")
+      .lean()
+      .exec(),
+    Car.countDocuments(filter),
+  ]);
+
+  return { items, total, page, limit };
 }
 
 async function listPublicCars(options) {
@@ -253,11 +304,16 @@ async function listPublicCars(options) {
     sort = "newest",
   } = options;
 
-  const filter = {
-    status: "active",
-    "verification.status": "verified",
+  /** Visible on marketplace: verified & active, or admin-blacklisted (still listed, not bookable). */
+  const visibility = {
+    $or: [
+      { status: "active", "verification.status": "verified" },
+      { "verification.status": "blacklisted" },
+    ],
     isDeleted: { $ne: true },
   };
+
+  const filter = { $and: [visibility] };
 
   const priceRange = {};
   if (minPrice != null) {
@@ -267,28 +323,32 @@ async function listPublicCars(options) {
     priceRange.$lte = maxPrice;
   }
   if (Object.keys(priceRange).length > 0) {
-    filter.basePricePerDay = priceRange;
+    filter.$and.push({ basePricePerDay: priceRange });
   }
 
   if (fuelType) {
-    filter.fuelType = fuelType;
+    filter.$and.push({ fuelType });
   }
   if (transmission) {
-    filter.transmission = transmission;
+    filter.$and.push({ transmission });
   }
   if (vehicleType) {
-    filter.vehicleType = vehicleType;
+    filter.$and.push({ vehicleType });
   }
 
   if (district && district.trim()) {
     const safe = district.trim();
-    filter["location.district"] = { $regex: new RegExp(safe.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") };
+    filter.$and.push({
+      "location.district": { $regex: new RegExp(safe.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") },
+    });
   }
 
   if (q && q.trim()) {
     const terms = q.trim();
     const rx = new RegExp(terms.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-    filter.$or = [{ title: rx }, { brand: rx }, { model: rx }, { description: rx }];
+    filter.$and.push({
+      $or: [{ title: rx }, { brand: rx }, { model: rx }, { description: rx }],
+    });
   }
 
   const skip = (page - 1) * limit;
@@ -319,9 +379,11 @@ async function getPublicCarById(id) {
   ensureValidObjectId(id, "car id");
   const car = await Car.findOne({
     _id: id,
-    status: "active",
-    "verification.status": "verified",
     isDeleted: { $ne: true },
+    $or: [
+      { status: "active", "verification.status": "verified" },
+      { "verification.status": "blacklisted" },
+    ],
   })
     .populate("ownerId", "name")
     .lean()
@@ -346,6 +408,7 @@ module.exports = {
   restoreOwnerCar,
   listPendingModerationCars,
   moderateCar,
+  listAllCarsAdmin,
   listPublicCars,
   getPublicCarById,
 };

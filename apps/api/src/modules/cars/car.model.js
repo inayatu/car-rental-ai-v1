@@ -15,7 +15,7 @@ const moderationEventSchema = new mongoose.Schema(
   {
     action: {
       type: String,
-      enum: ["submitted", "verified", "unverified", "blacklisted"],
+      enum: ["submitted", "verified", "unverified", "blacklisted", "unblacklisted"],
       required: true,
     },
     by: {
@@ -110,6 +110,25 @@ const carSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/** API/service verbs stored by mistake — normalize before enum validation on save. */
+const MODERATION_ACTION_ALIASES = {
+  blacklist: "blacklisted",
+  unblacklist: "unblacklisted",
+  verify: "verified",
+  unverify: "unverified",
+};
+
+carSchema.pre("validate", function normalizeModerationHistoryActions() {
+  const hist = this.moderationHistory;
+  if (!Array.isArray(hist) || hist.length === 0) return;
+  for (const ev of hist) {
+    if (ev && typeof ev.action === "string") {
+      const mapped = MODERATION_ACTION_ALIASES[ev.action];
+      if (mapped) ev.action = mapped;
+    }
+  }
+});
 
 carSchema.index({ ownerId: 1, status: 1, "location.district": 1 });
 carSchema.index({ "verification.status": 1, createdAt: -1 });

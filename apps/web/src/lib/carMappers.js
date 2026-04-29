@@ -4,6 +4,8 @@ import { labelForVehicleType } from "./vehicleTypes.js";
 /** Maps a public list/detail car from the API into the shape CarCard + detail UIs expect. */
 export function mapApiCarToDisplay(car) {
   if (!car) return null;
+  const blacklisted =
+    car.blacklisted === true || car.verification?.status === "blacklisted";
   const price = Number(car.basePricePerDay ?? 0) || 0;
   const images = Array.isArray(car.images)
     ? car.images
@@ -25,7 +27,8 @@ export function mapApiCarToDisplay(car) {
     fuel: car.fuelType || "—",
     seats: car.seats ?? "—",
     drive: car.transmission || "—",
-    status: "available",
+    blacklisted,
+    status: blacklisted ? "blacklisted" : "available",
     rating: 5,
     trips: 0,
     image: images[0] || null,

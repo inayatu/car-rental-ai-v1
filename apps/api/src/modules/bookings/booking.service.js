@@ -124,6 +124,12 @@ async function createBooking(renterId, renterRole, payload) {
     throw err;
   }
 
+  if (car.verification?.status === "blacklisted") {
+    const err = new Error(Messages.booking.carBlacklisted);
+    err.status = 409;
+    throw err;
+  }
+
   if (car.status !== "active") {
     const err = new Error(Messages.booking.carNotAvailable);
     err.status = 409;
@@ -176,7 +182,9 @@ async function createBooking(renterId, renterRole, payload) {
 async function listMyBookings(actorId, actorRole) {
   const query = {};
 
-  if (actorRole === "renter") {
+  if (actorRole === "admin" || actorRole === "govt_staff") {
+    /* staff sees full booking catalog */
+  } else if (actorRole === "renter") {
     query.renterId = actorId;
   } else if (actorRole === "owner") {
     query.ownerId = actorId;
@@ -189,6 +197,36 @@ async function listMyBookings(actorId, actorRole) {
     .populate("carId", BOOKING_CAR_POPULATE_SELECT)
     .populate("renterId", "name email phone")
     .populate("ownerId", "name email phone");
+}
+
+const ADMIN_BOOKING_STATUSES = new Set(["requested", "accepted", "rejected", "cancelled", "completed"]);
+
+/**
+ * Paginated booking catalog for admin/staff consoles.
+ */
+async function listBookingsAdmin(options = {}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 50));
+  const skip = (page - 1) * limit;
+
+  const query = {};
+  const status = options.status;
+  if (status && ADMIN_BOOKING_STATUSES.has(status)) {
+    query.status = status;
+  }
+
+  const [items, total] = await Promise.all([
+    Booking.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("carId", BOOKING_CAR_POPULATE_SELECT)
+      .populate("renterId", "name email phone")
+      .populate("ownerId", "name email phone"),
+    Booking.countDocuments(query),
+  ]);
+
+  return { items, total, page, limit };
 }
 
 async function getBookingByIdForActor(actorId, actorRole, bookingId) {
@@ -343,6 +381,7 @@ async function deleteBooking(actorId, actorRole, bookingId) {
 module.exports = {
   createBooking,
   listMyBookings,
+  listBookingsAdmin,
   getBookingByIdForActor,
   updateBookingStatus,
   deleteBooking,

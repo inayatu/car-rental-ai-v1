@@ -4,6 +4,7 @@ const express = require("express");
 const authRoutes = require("../modules/auth/auth.routes");
 const carRoutes = require("../modules/cars/car.routes");
 const bookingRoutes = require("../modules/bookings/booking.routes");
+const adminRoutes = require("../modules/admin/admin.routes");
 const openApiSpec = require("../docs/openapi");
 const env = require("../config/env");
 const brand = require("../constants/brand");
@@ -24,6 +25,7 @@ function registerRoutes(app) {
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
   app.use("/api/v1/auth", authRoutes);
+  app.use("/api/v1/admin", adminRoutes);
   app.use("/api/v1/cars", carRoutes);
   app.use("/api/v1/bookings", bookingRoutes);
 

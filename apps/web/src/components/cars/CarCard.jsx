@@ -4,8 +4,10 @@ import { Stars } from "../ui/Stars.jsx";
 import { Btn } from "../ui/Btn.jsx";
 
 export function CarCard({ car, onClick }) {
+  const isBlacklisted = car.blacklisted === true || car.status === "blacklisted";
   const isAvailable =
-    car.status === "available" || car.status === "active" || car.status == null || car.status === "";
+    !isBlacklisted &&
+    (car.status === "available" || car.status === "active" || car.status == null || car.status === "");
   const price = car.price ?? car.basePricePerDay;
   const tags = [
     ...(car.vehicleTypeLabel
@@ -56,7 +58,9 @@ export function CarCard({ car, onClick }) {
             pointerEvents: "none",
           }}
         >
-          {isAvailable ? (
+          {isBlacklisted ? (
+            <Badge variant="gold">Blacklisted · not bookable</Badge>
+          ) : isAvailable ? (
             <span className="car-card-available-badge">Available</span>
           ) : (
             <Badge variant="red">Unavailable</Badge>
@@ -95,6 +99,12 @@ export function CarCard({ car, onClick }) {
       </div>
       <div style={{ padding: "1.1rem" }}>
         <div style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>{car.name}</div>
+        {isBlacklisted && (
+          <div style={{ marginTop: 6, marginBottom: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Badge variant="gold">Blacklisted</Badge>
+            <span style={{ fontSize: 11, color: "var(--ink4)", fontWeight: 600 }}>Not available to book</span>
+          </div>
+        )}
         <div style={{ fontSize: 12, color: "var(--ink4)", margin: "3px 0 0.8rem", display: "flex", alignItems: "center", gap: 5 }}>📍 {car.loc}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.8rem" }}>
           {tags.map((s) => (
@@ -142,8 +152,8 @@ export function CarCard({ car, onClick }) {
           <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--ink4)", fontWeight: 400, whiteSpace: "nowrap" }}>/ day</span>
         </div>
         <div style={{ flex: "0 0 auto" }}>
-          <Btn variant={isAvailable ? "primary" : "outline"} size="sm" disabled={!isAvailable}>
-            {isAvailable ? "View & Book" : "Unavailable"}
+          <Btn variant={isBlacklisted ? "outline" : isAvailable ? "primary" : "outline"} size="sm" disabled={false}>
+            {isBlacklisted ? "View details" : isAvailable ? "View & Book" : "Unavailable"}
           </Btn>
         </div>
       </div>
