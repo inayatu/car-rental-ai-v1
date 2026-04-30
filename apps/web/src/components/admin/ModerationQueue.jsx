@@ -3,14 +3,20 @@ import { Card } from "../ui/Card.jsx";
 import { Btn } from "../ui/Btn.jsx";
 import { Badge } from "../ui/Badge.jsx";
 import { Alert } from "../ui/Alert.jsx";
+import { Pagination } from "../ui/Pagination.jsx";
 import { api } from "../../lib/apiClient.js";
 import { VehicleModerationReviewModal } from "./VehicleModerationReviewModal.jsx";
+
+const PAGE_SIZE = 10;
 
 /**
  * Lists cars pending moderation; full verify/unverify/blacklist + assets happen in the review modal.
  */
 export function ModerationQueue({ onModerationComplete }) {
   const [cars, setCars] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reviewCar, setReviewCar] = useState(null);
@@ -19,15 +25,21 @@ export function ModerationQueue({ onModerationComplete }) {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get("/admin/vehicles/pending-moderation");
+      const { data } = await api.get("/admin/vehicles/pending-moderation", {
+        params: { page, limit: PAGE_SIZE },
+      });
       setCars(data.cars || []);
+      const t = data.total ?? 0;
+      setTotal(t);
+      const tp = data.totalPages;
+      setTotalPages(typeof tp === "number" && tp > 0 ? tp : Math.max(1, Math.ceil(t / PAGE_SIZE)));
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || "Could not load queue.");
       setCars([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     load();
@@ -42,7 +54,7 @@ export function ModerationQueue({ onModerationComplete }) {
       )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
         <p style={{ fontSize: 13, color: "var(--ink3)", margin: 0 }}>
-          {loading ? "Loading…" : `${cars.length} vehicle(s) awaiting review`}
+          {loading ? "Loading…" : `${total} vehicle(s) awaiting review`}
         </p>
         <Btn variant="outline" size="sm" type="button" onClick={() => load()} disabled={loading}>
           Refresh
@@ -114,13 +126,18 @@ export function ModerationQueue({ onModerationComplete }) {
         </div>
       </Card>
 
+      {!loading && cars.length > 0 ? (
+        <Pagination page={Math.min(page, totalPages)} totalPages={totalPages} onPageChange={setPage} />
+      ) : null}
+
       {reviewCar && (
         <VehicleModerationReviewModal
           carId={reviewCar.id}
           initialCar={reviewCar}
           onClose={() => setReviewCar(null)}
           onModerationComplete={() => {
-            load();
+            if (page === 1) void load();
+            else setPage(1);
             onModerationComplete?.();
           }}
         />

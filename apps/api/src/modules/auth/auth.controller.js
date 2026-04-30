@@ -4,8 +4,10 @@ const {
   loginSchema,
   refreshBodySchema,
   logoutBodySchema,
+  profilePatchSchema,
 } = require("./auth.validation");
 const authService = require("./auth.service");
+const { processUserIdentityImage } = require("../users/user-identity.service");
 const { verifyAccessToken } = require("../../utils/jwt");
 const {
   setAuthCookies,
@@ -23,6 +25,9 @@ function sanitizeUser(user) {
     email: user.email,
     phone: user.phone,
     verificationStatus: user.verificationStatus,
+    selfieUrl: user.selfieUrl || null,
+    cnicImageUrl: user.cnicImageUrl || null,
+    identitySubmittedAt: user.identitySubmittedAt || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -116,6 +121,81 @@ async function refresh(req, res, next) {
   }
 }
 
+async function patchProfile(req, res, next) {
+  try {
+    const body = profilePatchSchema.parse(req.body || {});
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      const err = new Error("User not found");
+      err.status = 404;
+      throw err;
+    }
+    if (user.verificationStatus === "verified") {
+      const err = new Error(Messages.profile.verifiedReadOnly);
+      err.status = 403;
+      throw err;
+    }
+    if (body.email && body.email.toLowerCase() !== user.email) {
+      const taken = await User.findOne({ email: body.email.toLowerCase(), _id: { $ne: user._id } });
+      if (taken) {
+        const err = new Error(Messages.profile.emailInUse);
+        err.status = 409;
+        throw err;
+      }
+      user.email = body.email.toLowerCase();
+    }
+    if (body.phone && body.phone.trim() !== user.phone) {
+      const taken = await User.findOne({ phone: body.phone.trim(), _id: { $ne: user._id } });
+      if (taken) {
+        const err = new Error(Messages.profile.phoneInUse);
+        err.status = 409;
+        throw err;
+      }
+      user.phone = body.phone.trim();
+    }
+    if (body.name) user.name = body.name.trim();
+    await user.save();
+    return res.status(200).json({ user: sanitizeUser(user) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function uploadProfileIdentity(req, res, next) {
+  try {
+    const user = await User.findById(req.user.sub);
+    if (!user) {
+      const err = new Error("User not found");
+      err.status = 404;
+      throw err;
+    }
+    if (user.verificationStatus === "verified") {
+      const err = new Error(Messages.profile.identityVerifiedLocked);
+      err.status = 403;
+      throw err;
+    }
+    const selfie = req.files?.selfie?.[0];
+    const cnic = req.files?.cnic?.[0];
+    if (!selfie || !cnic) {
+      const err = new Error(Messages.profile.identityRequiresBothImages);
+      err.status = 400;
+      throw err;
+    }
+    const selfieUrl = await processUserIdentityImage(selfie);
+    const cnicImageUrl = await processUserIdentityImage(cnic);
+    user.selfieUrl = selfieUrl;
+    user.cnicImageUrl = cnicImageUrl;
+    user.identitySubmittedAt = new Date();
+    if (user.verificationStatus === "pending" || user.verificationStatus === "rejected") {
+      user.verificationStatus = "under_review";
+    }
+    await user.save();
+    return res.status(200).json({ user: sanitizeUser(user) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function logout(req, res, next) {
   try {
     logoutBodySchema.parse(req.body);
@@ -139,5 +219,7 @@ module.exports = {
   register,
   login,
   refresh,
+  patchProfile,
+  uploadProfileIdentity,
   logout,
 };

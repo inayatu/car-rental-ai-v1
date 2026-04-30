@@ -2,6 +2,7 @@ const {
   createBookingSchema,
   bookingIdParamsSchema,
   updateBookingSchema,
+  listMyBookingsQuerySchema,
 } = require("./booking.validation");
 const bookingService = require("./booking.service");
 
@@ -125,9 +126,19 @@ async function createBooking(req, res, next) {
 
 async function listMyBookings(req, res, next) {
   try {
-    const bookings = await bookingService.listMyBookings(req.user.sub, req.user.role);
+    const q = listMyBookingsQuerySchema.parse(req.query || {});
+    const { items, total, page, limit } = await bookingService.listMyBookings(req.user.sub, req.user.role, {
+      page: q.page,
+      limit: q.limit,
+      tab: q.tab,
+    });
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
     return res.status(200).json({
-      bookings: bookings.map((booking) => sanitizeBooking(booking, req.user.sub, req.user.role)),
+      bookings: items.map((booking) => sanitizeBooking(booking, req.user.sub, req.user.role)),
+      total,
+      page,
+      limit,
+      totalPages,
     });
   } catch (error) {
     return next(error);

@@ -2,6 +2,9 @@
 
 export const PATH = {
   home: "/",
+  about: "/about",
+  howItWorks: "/how-it-works",
+  safetyPolicy: "/safety-policy",
   listings: "/listings",
   car: (id) => `/cars/${encodeURIComponent(String(id))}`,
   login: "/login",

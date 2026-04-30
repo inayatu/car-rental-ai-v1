@@ -188,12 +188,16 @@ async function listVehicles(req, res, next) {
   }
 }
 
-async function listVehiclesPendingModeration(_req, res, next) {
+async function listVehiclesPendingModeration(req, res, next) {
   try {
-    const cars = await carService.listPendingModerationCars();
-    return res.status(200).json({
-      cars: cars.map((c) => carController.sanitizeCar(c)),
+    const q = paginationQuerySchema.parse(req.query);
+    const { items, total, page, limit } = await carService.listPendingModerationCars({
+      page: q.page,
+      limit: q.limit,
     });
+    const cars = items.map((c) => carController.sanitizeCar(c));
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    return res.status(200).json({ cars, total, page, limit, totalPages });
   } catch (error) {
     return next(error);
   }

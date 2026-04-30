@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema(
       enum: ["pending", "under_review", "verified", "rejected"],
       default: "pending",
     },
+    /** Public URL path e.g. /uploads/users/identity/... */
+    selfieUrl: { type: String, trim: true },
+    cnicImageUrl: { type: String, trim: true },
+    identitySubmittedAt: { type: Date },
     refreshTokens: [{ type: String }],
   },
   { timestamps: true }

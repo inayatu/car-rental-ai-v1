@@ -15,6 +15,9 @@ import { PageOwnerBookings } from "./pages/PageOwnerBookings.jsx";
 import { PageOwnerDashboard } from "./pages/PageOwnerDashboard.jsx";
 import { PageProfile } from "./pages/PageProfile.jsx";
 import { PageRenterDashboard } from "./pages/PageRenterDashboard.jsx";
+import { PageAbout } from "./pages/PageAbout.jsx";
+import { PageHowItWorks } from "./pages/PageHowItWorks.jsx";
+import { PageSafetyPolicy } from "./pages/PageSafetyPolicy.jsx";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -49,6 +52,9 @@ export default function App() {
       <Nav />
       <Routes>
         <Route path={PATH.home} element={<PageHome />} />
+        <Route path={PATH.about} element={<PageAbout />} />
+        <Route path={PATH.howItWorks} element={<PageHowItWorks />} />
+        <Route path={PATH.safetyPolicy} element={<PageSafetyPolicy />} />
         <Route path={PATH.listings} element={<PageListings />} />
         <Route path="/cars/:carId" element={<PageDetail />} />
         <Route

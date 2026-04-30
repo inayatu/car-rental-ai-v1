@@ -18,6 +18,7 @@ import {
   getModelsForBrand,
 } from "../lib/vehicleOptions.js";
 import { VEHICLE_TYPES, defaultVehicleType } from "../lib/vehicleTypes.js";
+import { CAR_TITLE_MAX_LENGTH, truncateCarTitle } from "../lib/carTitleLimits.js";
 
 const DISTRICTS = [
   "Hunza",
@@ -210,10 +211,11 @@ export function PageAddListing() {
               <Card style={{ padding: "clamp(1rem, 4vw, 1.8rem)", marginBottom: "1.5rem" }}>
                 <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1rem, 2.5vw, 1.1rem)", margin: "0 0 1rem" }}>Vehicle</h2>
                 <div className="gb-form-2">
-                  <FormGroup label="Listing title (optional)">
+                  <FormGroup label={`Listing title (optional, max ${CAR_TITLE_MAX_LENGTH} characters)`}>
                     <input
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      maxLength={CAR_TITLE_MAX_LENGTH}
+                      onChange={(e) => setTitle(e.target.value.slice(0, CAR_TITLE_MAX_LENGTH))}
                       placeholder={`${brand || "Toyota"} ${model || "Prado"} ${year || ""}`.trim()}
                     />
                   </FormGroup>

@@ -24,6 +24,14 @@ const Messages = {
     moderationMutation: "Too many moderation actions. Please wait and try again.",
   },
 
+  profile: {
+    verifiedReadOnly: "Your identity is verified. Name, email, and phone cannot be changed.",
+    identityVerifiedLocked: "Identity documents cannot be replaced after verification.",
+    identityRequiresBothImages: "Upload both a selfie and a CNIC photo.",
+    emailInUse: "That email is already in use.",
+    phoneInUse: "That phone number is already in use.",
+  },
+
   auth: {
     missingRefreshToken: "Missing refresh token",
     invalidRoleSelfRegistration: "Invalid role for self registration",
@@ -44,6 +52,7 @@ const Messages = {
     carNotAvailable: "Car is not available for booking",
     carBlacklisted: "This listing is blacklisted and cannot be booked",
     carNotVerifiedForBooking: "Car is not verified for booking",
+    ownerNotVerifiedForBooking: "This vehicle is not available for booking until the owner is verified.",
     notFound: "Booking not found",
     statusRequired: "status is required",
     renterCancelOnly: "Renter can only cancel own booking",
@@ -65,6 +74,10 @@ const Messages = {
     reasonRequiredUnverifyBlacklist:
       "Reason is required for unverify, blacklist, and remove-blacklist actions",
     notBlacklisted: "This listing is not blacklisted",
+    listingBlacklistedOwnerLocked:
+      "This listing is blacklisted by moderators. Editing, changing listing status, removing, or restoring it is disabled until staff clears the blacklist.",
+    verifiedListingNoDocChanges:
+      "This listing is verified. Documents and photos cannot be replaced from this screen.",
   },
 
   upload: {

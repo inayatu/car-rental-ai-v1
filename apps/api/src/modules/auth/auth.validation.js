@@ -25,9 +25,19 @@ const logoutBodySchema = z
   })
   .strict();
 
+const profilePatchSchema = z
+  .object({
+    name: z.string().min(2).max(80).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().min(8).max(20).optional(),
+  })
+  .strict()
+  .refine((b) => Object.keys(b).length > 0, { message: "At least one field is required" });
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshBodySchema,
   logoutBodySchema,
+  profilePatchSchema,
 };

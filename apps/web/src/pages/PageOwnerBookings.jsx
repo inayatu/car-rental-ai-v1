@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import dayjs from "dayjs";
 import { Btn } from "../components/ui/Btn.jsx";
 import { Alert } from "../components/ui/Alert.jsx";
 import { Sidebar } from "../components/layout/Sidebar.jsx";
@@ -10,7 +9,7 @@ import { Pagination } from "../components/ui/Pagination.jsx";
 import { api } from "../lib/apiClient.js";
 import { PATH } from "../lib/paths.js";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
-import { ownerBookingInTab, parseOwnerBookingTab } from "../lib/bookingTabFilters.js";
+import { parseOwnerBookingTab } from "../lib/bookingTabFilters.js";
 
 const TABS = /** @type {const} */ ([
   { id: "pending", label: "Pending" },
@@ -36,6 +35,7 @@ export function PageOwnerBookings() {
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
   const [bookings, setBookings] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
@@ -46,14 +46,19 @@ export function PageOwnerBookings() {
     setActionErr(null);
     setLoading(true);
     try {
-      const { data } = await api.get("/bookings/mine");
+      const { data } = await api.get("/bookings/mine", {
+        params: { tab, page, limit: PAGE_SIZE },
+      });
       setBookings(data?.bookings || []);
+      const tp = data?.totalPages;
+      const t = data?.total ?? 0;
+      setTotalPages(typeof tp === "number" && tp > 0 ? tp : Math.max(1, Math.ceil(t / PAGE_SIZE)));
     } catch (e) {
       setErr(e?.response?.data?.message || e?.message || "Failed to load bookings.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tab, page]);
 
   useEffect(() => {
     void load();
@@ -84,21 +89,7 @@ export function PageOwnerBookings() {
     }
   };
 
-  const filtered = useMemo(() => {
-    const list = (bookings || []).filter((b) => ownerBookingInTab(b, tab));
-    return list.sort((a, b) => {
-      const ta = dayjs(a.startDate).valueOf();
-      const tb = dayjs(b.startDate).valueOf();
-      if (ta !== tb) return tab === "completed" ? tb - ta : ta - tb;
-      return 0;
-    });
-  }, [bookings, tab]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const paged = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, safePage]);
 
   return (
     <div style={shellDashboard}>
@@ -180,10 +171,10 @@ export function PageOwnerBookings() {
           role="tabpanel"
           aria-labelledby={`ob-tab-${tab}`}
         >
-          {!loading && filtered.length === 0 && <p style={{ color: "var(--ink3)" }}>{emptyCopy(tab)}</p>}
+          {!loading && bookings.length === 0 && <p style={{ color: "var(--ink3)" }}>{emptyCopy(tab)}</p>}
 
           {!loading &&
-            paged.map((b) => (
+            bookings.map((b) => (
               <OwnerBookingCard
                 key={b.id}
                 booking={b}
@@ -199,7 +190,7 @@ export function PageOwnerBookings() {
               />
             ))}
         </div>
-        {!loading && filtered.length > 0 ? (
+        {!loading && bookings.length > 0 ? (
           <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
         ) : null}
       </main>

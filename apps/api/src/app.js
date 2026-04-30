@@ -58,6 +58,18 @@ registerRoutes(app);
 app.use((error, _req, res, _next) => {
   logger.error("Unhandled API error", error);
 
+  if (error && error.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({
+      message: "File too large. Use images under the configured upload limit.",
+    });
+  }
+
+  if (error && error.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).json({
+      message: "Unexpected file field. Use form fields \"selfie\" and \"cnic\".",
+    });
+  }
+
   if (error && error.name === "ZodError") {
     return res.status(400).json({
       message: Messages.http.validationError,

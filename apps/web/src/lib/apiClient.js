@@ -79,6 +79,26 @@ api.interceptors.response.use(
       original.__didRefresh = true;
       original.headers = original.headers || {};
       original.headers.Authorization = `Bearer ${next}`;
+
+      // Multipart bodies are often not replayable after the first failed attempt (e.g. 401 → refresh → retry).
+      // Rebuild FormData from file entries so the retry includes both files.
+      if (typeof FormData !== "undefined" && original.data instanceof FormData) {
+        const rebuilt = new FormData();
+        try {
+          for (const [key, value] of original.data.entries()) {
+            rebuilt.append(key, value);
+          }
+        } catch {
+          return Promise.reject(err);
+        }
+        original.data = rebuilt;
+        if (typeof original.headers.delete === "function") {
+          original.headers.delete("Content-Type");
+        } else {
+          delete original.headers["Content-Type"];
+        }
+      }
+
       return api.request(original);
     } catch (e) {
       clearStoredTokens();

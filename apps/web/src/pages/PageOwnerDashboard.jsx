@@ -15,6 +15,7 @@ import { resolveAssetUrl } from "../lib/resolveApiUrl.js";
 import { Eyebrow } from "../components/ui/Eyebrow.jsx";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const CARS_PAGE_SIZE = 6;
 
@@ -30,8 +31,9 @@ const sectionPanel = (accent) => ({
 
 export function PageOwnerDashboard() {
   const navigate = useNavigate();
-  const [cars, setCars] = useState([]);
-  const [bookings, setBookings] = useState([]);
+  const { user } = useAuth();
+  const [listedCars, setListedCars] = useState([]);
+  const [removedCars, setRemovedCars] = useState([]);
   const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
@@ -41,24 +43,48 @@ export function PageOwnerDashboard() {
   const [editErr, setEditErr] = useState(null);
   const [listedPage, setListedPage] = useState(1);
   const [removedPage, setRemovedPage] = useState(1);
+  const [listedTotalPages, setListedTotalPages] = useState(1);
+  const [removedTotalPages, setRemovedTotalPages] = useState(1);
+  const [listedVehicleTotal, setListedVehicleTotal] = useState(0);
+  const [removedTotal, setRemovedTotal] = useState(0);
+  const [activeListedCount, setActiveListedCount] = useState(0);
+  const [pendingBookingCount, setPendingBookingCount] = useState(0);
+  const [allBookingCount, setAllBookingCount] = useState(0);
 
   const load = useCallback(async () => {
     setErr(null);
     setActionErr(null);
     setLoading(true);
     try {
-      const [cRes, bRes] = await Promise.all([
-        api.get("/cars/mine", { params: { includeDeleted: "1" } }),
-        api.get("/bookings/mine"),
+      const [listedRes, removedRes, pendBookRes, allBookRes] = await Promise.all([
+        api.get("/cars/mine", { params: { page: listedPage, limit: CARS_PAGE_SIZE } }),
+        api.get("/cars/mine", { params: { removed: "1", page: removedPage, limit: CARS_PAGE_SIZE } }),
+        api.get("/bookings/mine", { params: { tab: "pending", limit: 1, page: 1 } }),
+        api.get("/bookings/mine", { params: { tab: "all", limit: 1, page: 1 } }),
       ]);
-      setCars(cRes.data?.cars || []);
-      setBookings(bRes.data?.bookings || []);
+      const ld = listedRes.data || {};
+      const rd = removedRes.data || {};
+      setListedCars(ld.cars || []);
+      const lt = ld.total ?? 0;
+      const ltp = ld.totalPages;
+      setListedVehicleTotal(lt);
+      setListedTotalPages(typeof ltp === "number" && ltp > 0 ? ltp : Math.max(1, Math.ceil(lt / CARS_PAGE_SIZE)));
+      setActiveListedCount(ld.activeListedCount ?? 0);
+
+      setRemovedCars(rd.cars || []);
+      const rt = rd.total ?? 0;
+      const rtp = rd.totalPages;
+      setRemovedTotal(rt);
+      setRemovedTotalPages(typeof rtp === "number" && rtp > 0 ? rtp : Math.max(1, Math.ceil(rt / CARS_PAGE_SIZE)));
+
+      setPendingBookingCount(pendBookRes.data?.total ?? 0);
+      setAllBookingCount(allBookRes.data?.total ?? 0);
     } catch (e) {
       setErr(e?.response?.data?.message || e?.message || "Failed to load owner data.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [listedPage, removedPage]);
 
   useEffect(() => {
     load();
@@ -91,6 +117,7 @@ export function PageOwnerDashboard() {
 
   const saveEditedListing = async (payload) => {
     if (!editingCar?.id) return;
+    if (editingCar?.verification?.status === "blacklisted") return;
     setEditErr(null);
     setSavingEdit(true);
     try {
@@ -104,17 +131,8 @@ export function PageOwnerDashboard() {
     }
   };
 
-  const listedCars = cars.filter((c) => !c.isDeleted);
-  const removedCars = cars.filter((c) => c.isDeleted);
-  const listedTotalPages = Math.max(1, Math.ceil(listedCars.length / CARS_PAGE_SIZE));
-  const removedTotalPages = Math.max(1, Math.ceil(removedCars.length / CARS_PAGE_SIZE));
   const listedSafePage = Math.min(listedPage, listedTotalPages);
   const removedSafePage = Math.min(removedPage, removedTotalPages);
-  const listedPaged = listedCars.slice((listedSafePage - 1) * CARS_PAGE_SIZE, listedSafePage * CARS_PAGE_SIZE);
-  const removedPaged = removedCars.slice((removedSafePage - 1) * CARS_PAGE_SIZE, removedSafePage * CARS_PAGE_SIZE);
-
-  const pending = bookings.filter((b) => b.status === "requested");
-  const activeCount = listedCars.filter((x) => x.status === "active").length;
 
   return (
     <div style={shellDashboard}>
@@ -142,6 +160,15 @@ export function PageOwnerDashboard() {
 
         {err && <Alert type="error">{err}</Alert>}
         {actionErr && <Alert type="error">{actionErr}</Alert>}
+        {user?.verificationStatus && user.verificationStatus !== "verified" ? (
+          <Alert type="warn" style={{ marginBottom: "1rem" }}>
+            Your listings stay off public search until staff verifies your identity. Upload your CNIC and a selfie on{" "}
+            <Link to={PATH.profile} style={{ color: "inherit", fontWeight: 700 }}>
+              Profile
+            </Link>
+            .
+          </Alert>
+        ) : null}
 
         <div
           style={{
@@ -163,8 +190,8 @@ export function PageOwnerDashboard() {
           >
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "var(--ink4)", marginBottom: "0.9rem" }}>BOOKINGS</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
-              <StatBox val={String(pending.length)} label="Pending requests" color="var(--gold)" />
-              <StatBox val={String(bookings.length)} label="All bookings" />
+              <StatBox val={String(pendingBookingCount)} label="Pending requests" color="var(--gold)" />
+              <StatBox val={String(allBookingCount)} label="All bookings" />
             </div>
             <Btn
               variant="primary"
@@ -187,8 +214,8 @@ export function PageOwnerDashboard() {
           >
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "var(--ink4)", marginBottom: "0.9rem" }}>LISTINGS (VEHICLES)</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
-              <StatBox val={String(listedCars.length)} label="My vehicles" color="var(--teal)" />
-              <StatBox val={String(activeCount)} label="Active listings" />
+              <StatBox val={String(listedVehicleTotal)} label="My vehicles" color="var(--teal)" />
+              <StatBox val={String(activeListedCount)} label="Active listings" />
             </div>
           </div>
         </div>
@@ -237,14 +264,24 @@ export function PageOwnerDashboard() {
             marginBottom: "0",
           }}
         >
-          {listedCars.length === 0 && !loading && <p style={{ color: "var(--ink3)", gridColumn: "1 / -1" }}>No vehicles yet. Add one to get booking requests.</p>}
-          {listedPaged.map((v) => {
+          {listedVehicleTotal === 0 && !loading && <p style={{ color: "var(--ink3)", gridColumn: "1 / -1" }}>No vehicles yet. Add one to get booking requests.</p>}
+          {listedCars.map((v) => {
             const cover = v.images?.[0] ? resolveAssetUrl(v.images[0]) : null;
             const ver = v.verification?.status || "—";
-            const verVariant = ver === "verified" ? "teal" : ver === "pending" ? "gold" : "gray";
+            const verVariant =
+              ver === "verified" ? "teal" : ver === "pending" ? "gold" : ver === "blacklisted" ? "red" : "gray";
             const busy = actionId === v.id;
+            const ownerLocked = v.verification?.status === "blacklisted";
             return (
-              <Card key={v.id} style={{ overflow: "hidden" }}>
+              <Card
+                key={v.id}
+                style={{
+                  overflow: "hidden",
+                  ...(ownerLocked
+                    ? { border: "2px solid rgba(220, 38, 38, 0.4)", boxShadow: "0 2px 14px rgba(220, 38, 38, 0.1)" }
+                    : {}),
+                }}
+              >
                 <div
                   style={{
                     height: 120,
@@ -264,37 +301,83 @@ export function PageOwnerDashboard() {
                 </div>
                 <div style={{ padding: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 8, flexWrap: "wrap" }}>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{v.title || `${v.brand} ${v.model}`}</div>
+                    <div
+                      title={v.title || `${v.brand} ${v.model}`}
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 14,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        wordBreak: "break-word",
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      {v.title || `${v.brand} ${v.model}`}
+                    </div>
                     <Badge variant={verVariant}>{ver}</Badge>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--ink4)", marginTop: 6, lineHeight: 1.5 }}>
                     {v.location?.district || "—"} · listing: {v.status} · {v.basePricePerDay != null ? `${v.currency || "PKR"} ${v.basePricePerDay} / day` : "—"}
                     {v.registrationNumber ? <span> · {v.registrationNumber}</span> : null}
                   </div>
-                  <p style={{ fontSize: 11, color: "var(--ink3)", margin: "0.6rem 0 0.5rem", lineHeight: 1.5 }}>
-                    <strong>active</strong> = eligible for public search (once verified). <strong>paused</strong> = hidden. <strong>draft</strong> = not live.
-                  </p>
+                  {ownerLocked ? (
+                    <Alert type="warn" style={{ margin: "0.65rem 0 0.5rem", fontSize: 12, lineHeight: 1.55 }}>
+                      This listing is <strong>blacklisted by moderators</strong>. Editing, changing status (pause/resume/draft), and
+                      removing it are disabled until staff clears the blacklist.
+                    </Alert>
+                  ) : (
+                    <p style={{ fontSize: 11, color: "var(--ink3)", margin: "0.6rem 0 0.5rem", lineHeight: 1.5 }}>
+                      <strong>active</strong> = eligible for public search (once verified). <strong>paused</strong> = hidden.{" "}
+                      <strong>draft</strong> = not live.
+                    </p>
+                  )}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.5rem" }}>
-                    <Btn type="button" variant="outline" size="sm" disabled={busy} onClick={() => setEditingCar(v)}>
+                    <Btn type="button" variant="outline" size="sm" disabled={busy || ownerLocked} onClick={() => setEditingCar(v)}>
                       Edit
                     </Btn>
                     {v.status === "active" && (
-                      <Btn type="button" variant="outline" size="sm" disabled={busy} onClick={() => setListingStatus(v.id, "paused")}>
+                      <Btn
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busy || ownerLocked}
+                        onClick={() => setListingStatus(v.id, "paused")}
+                      >
                         Pause
                       </Btn>
                     )}
                     {v.status === "paused" && (
-                      <Btn type="button" variant="primary" size="sm" disabled={busy} onClick={() => setListingStatus(v.id, "active")}>
+                      <Btn
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        disabled={busy || ownerLocked}
+                        onClick={() => setListingStatus(v.id, "active")}
+                      >
                         Resume
                       </Btn>
                     )}
                     {v.status === "draft" && (
-                      <Btn type="button" variant="primary" size="sm" disabled={busy} onClick={() => setListingStatus(v.id, "active")}>
+                      <Btn
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        disabled={busy || ownerLocked}
+                        onClick={() => setListingStatus(v.id, "active")}
+                      >
                         Set active
                       </Btn>
                     )}
                     {v.status !== "draft" && (
-                      <Btn type="button" variant="outline" size="sm" disabled={busy} onClick={() => setListingStatus(v.id, "draft")}>
+                      <Btn
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busy || ownerLocked}
+                        onClick={() => setListingStatus(v.id, "draft")}
+                      >
                         Mark draft
                       </Btn>
                     )}
@@ -302,7 +385,7 @@ export function PageOwnerDashboard() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      disabled={busy}
+                      disabled={busy || ownerLocked}
                       onClick={() => removeListing(v.id)}
                       style={{ borderColor: "rgba(220,38,38,0.4)", color: "#b91c1c" }}
                     >
@@ -314,12 +397,12 @@ export function PageOwnerDashboard() {
             );
           })}
         </div>
-        {!loading && listedCars.length > 0 ? (
+        {!loading && listedVehicleTotal > 0 ? (
           <Pagination page={listedSafePage} totalPages={listedTotalPages} onPageChange={setListedPage} />
         ) : null}
         </section>
 
-        {removedCars.length > 0 && (
+        {removedTotal > 0 && (
           <>
             <h2
               style={{
@@ -343,9 +426,10 @@ export function PageOwnerDashboard() {
                 opacity: 0.95,
               }}
             >
-              {removedPaged.map((v) => {
+              {removedCars.map((v) => {
                 const cover = v.images?.[0] ? resolveAssetUrl(v.images[0]) : null;
                 const busy = actionId === v.id;
+                const restoreLocked = v.verification?.status === "blacklisted";
                 return (
                   <Card key={v.id} style={{ overflow: "hidden", border: "1px dashed var(--border)" }}>
                     <div
@@ -362,24 +446,44 @@ export function PageOwnerDashboard() {
                       {cover ? <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span aria-hidden>🚙</span>}
                     </div>
                     <div style={{ padding: "0.9rem" }}>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>{v.title || `${v.brand} ${v.model}`}</div>
-                      <div style={{ fontSize: 11, color: "var(--ink4)", marginTop: 4 }}>Removed · {v.deletedAt ? dayjs(v.deletedAt).format("D MMM YYYY") : "—"}</div>
-                      <Btn
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        disabled={busy}
-                        onClick={() => restoreListing(v.id)}
-                        style={{ marginTop: "0.6rem" }}
+                      <div
+                        title={v.title || `${v.brand} ${v.model}`}
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          wordBreak: "break-word",
+                          lineHeight: 1.35,
+                        }}
                       >
-                        Restore
-                      </Btn>
+                        {v.title || `${v.brand} ${v.model}`}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--ink4)", marginTop: 4 }}>Removed · {v.deletedAt ? dayjs(v.deletedAt).format("D MMM YYYY") : "—"}</div>
+                      {restoreLocked ? (
+                        <Alert type="warn" style={{ marginTop: "0.65rem", fontSize: 11, lineHeight: 1.5 }}>
+                          Blacklisted listings cannot be restored by the owner. Contact support if you need help.
+                        </Alert>
+                      ) : (
+                        <Btn
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => restoreListing(v.id)}
+                          style={{ marginTop: "0.6rem" }}
+                        >
+                          Restore
+                        </Btn>
+                      )}
                     </div>
                   </Card>
                 );
               })}
             </div>
-            {!loading && removedCars.length > 0 ? (
+            {!loading && removedTotal > 0 ? (
               <Pagination page={removedSafePage} totalPages={removedTotalPages} onPageChange={setRemovedPage} />
             ) : null}
           </>

@@ -678,6 +678,7 @@ export function PageAdmin() {
                       <th>Phone</th>
                       <th>Role</th>
                       <th>Verification</th>
+                      <th>ID docs</th>
                       <th>Joined</th>
                       <th style={{ minWidth: 90 }}> </th>
                     </tr>
@@ -685,13 +686,13 @@ export function PageAdmin() {
                   <tbody>
                     {usersLoading ? (
                       <tr>
-                        <td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "var(--ink4)" }}>
+                        <td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "var(--ink4)" }}>
                           Loading users…
                         </td>
                       </tr>
                     ) : users.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "var(--ink4)" }}>
+                        <td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "var(--ink4)" }}>
                           No users on this page.
                         </td>
                       </tr>
@@ -707,6 +708,13 @@ export function PageAdmin() {
                             <Badge variant="gray">{u.role}</Badge>
                           </td>
                           <td>{u.verificationStatus ? <Badge variant="teal">{u.verificationStatus}</Badge> : "—"}</td>
+                          <td style={{ fontSize: 12 }}>
+                            {u.selfieUrl && u.cnicImageUrl ? (
+                              <span title="Selfie + CNIC on file">✓ Yes</span>
+                            ) : (
+                              <span style={{ color: "var(--ink4)" }}>—</span>
+                            )}
+                          </td>
                           <td style={{ fontSize: 12, color: "var(--ink4)" }}>
                             {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB") : "—"}
                           </td>

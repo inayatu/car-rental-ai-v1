@@ -13,6 +13,116 @@ import { api } from "../lib/apiClient.js";
 import { mapApiCarToDisplay } from "../lib/carMappers.js";
 import { PATH } from "../lib/paths.js";
 import { contentMax } from "../lib/pageLayout.js";
+import { BRAND } from "../lib/brand.js";
+
+/** Small seal with checkmark — reads like a credential mark, not a neon pill */
+function VerifiedSeal({ size = 40 }) {
+  const s = size;
+  const icon = Math.round(s * 0.45);
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: s,
+        height: s,
+        borderRadius: "50%",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(165deg, #0f766e 0%, #047857 48%, #065f46 100%)",
+        boxShadow:
+          "0 2px 10px rgba(4, 94, 66, 0.35), inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.12)",
+        border: "1px solid rgba(255,255,255,0.2)",
+      }}
+    >
+      <svg width={icon} height={icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <path
+          d="M20 6L9 17l-5-5"
+          stroke="#fff"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * @param {{ compact?: boolean }} props — compact = single-line chip for headers / sidebar
+ */
+function VerifiedHostTrustBadge({ compact }) {
+  if (compact) {
+    return (
+      <span
+        role="status"
+        aria-label="Verified listing"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "5px 12px 5px 6px",
+          borderRadius: 999,
+          background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+          border: "1px solid rgba(15, 118, 110, 0.28)",
+          boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+        }}
+      >
+        <VerifiedSeal size={26} />
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily: "var(--font-display)",
+            color: "#0f766e",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Verified listing
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <div
+      role="status"
+      aria-label="Verified host"
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+        padding: "12px 14px",
+        borderRadius: 12,
+        background: "linear-gradient(175deg, #ffffff 0%, #f1f5f9 100%)",
+        border: "1px solid rgba(15, 118, 110, 0.22)",
+        boxShadow: "0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255,255,255, 0.9)",
+        maxWidth: 340,
+      }}
+    >
+      <VerifiedSeal size={44} />
+      <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#134e4a",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.25,
+          }}
+        >
+          Verified host
+        </div>
+        <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--ink3)", lineHeight: 1.5 }}>
+          This owner’s identity and listing passed review by{" "}
+          <strong style={{ color: "var(--ink2)", fontWeight: 600 }}>{BRAND.domain}</strong> before the vehicle appeared in search — similar to a checked host profile on major marketplaces.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function PageDetail() {
   const { carId: carIdParam } = useParams();
@@ -187,6 +297,7 @@ export function PageDetail() {
     .slice(0, 4);
 
   const isBlacklisted = raw?.blacklisted === true || raw?.verification?.status === "blacklisted";
+  const isVerified = Boolean(raw?.verification?.verifiedBadge) && !isBlacklisted;
   const isAvailable =
     !isBlacklisted &&
     (display.status === "available" || display.status === "active" || display.status == null || display.status === "");
@@ -231,30 +342,25 @@ export function PageDetail() {
                   🚙
                 </div>
               )}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 14,
-                  left: 14,
-                  zIndex: 2,
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                }}
-              >
-                {isBlacklisted ? (
-                  <Badge variant="gold">Blacklisted · not bookable</Badge>
-                ) : isAvailable ? (
-                  <span className="car-card-available-badge">Available</span>
-                ) : (
-                  <Badge variant="red">Unavailable</Badge>
-                )}
-              </div>
-              {!isBlacklisted && raw?.verification?.verifiedBadge && (
-                <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2, pointerEvents: "none" }}>
-                  <Badge variant="green">✓ Verified</Badge>
+              {(isBlacklisted || !isAvailable) && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 14,
+                    left: 14,
+                    zIndex: 2,
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {isBlacklisted ? (
+                    <Badge variant="gold">Blacklisted · not bookable</Badge>
+                  ) : (
+                    <Badge variant="red">Unavailable</Badge>
+                  )}
                 </div>
               )}
             </div>
@@ -312,18 +418,27 @@ export function PageDetail() {
                   }}
                 >
                   <h1
+                    title={display.name}
                     style={{
                       fontFamily: "var(--font-display)",
                       fontSize: "clamp(1.35rem, 4.5vw, 2rem)",
                       fontWeight: 700,
                       letterSpacing: "-0.5px",
-                      lineHeight: 1.2,
+                      lineHeight: 1.25,
                       margin: 0,
+                      maxWidth: "min(100%, 36rem)",
+                      minWidth: 0,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      wordBreak: "break-word",
                     }}
                   >
                     {display.name}
                   </h1>
                   {isBlacklisted && <Badge variant="gold">Blacklisted</Badge>}
+                  {isVerified && <VerifiedHostTrustBadge compact />}
                 </div>
                 <div style={{ fontSize: 13, color: "var(--ink4)", marginTop: 4 }}>📍 {display.loc}</div>
                 {isBlacklisted && (
@@ -390,9 +505,6 @@ export function PageDetail() {
                   {f}
                 </Badge>
               ))}
-              {!isBlacklisted && raw?.verification?.verifiedBadge && (
-                <Badge variant="green">✓ Platform verified</Badge>
-              )}
               {isBlacklisted && (
                 <Badge variant="gold">Moderation: blacklisted — booking disabled</Badge>
               )}
@@ -446,8 +558,8 @@ export function PageDetail() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{display.ownerName || "Local owner"}</div>
                 <div style={{ fontSize: 11, color: "var(--ink4)", marginTop: 2 }}>{display.loc}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
-                  {!isBlacklisted && raw?.verification?.verifiedBadge && <Badge variant="green">✓ Verified</Badge>}
+                <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
+                  {isVerified && <VerifiedHostTrustBadge />}
                   {isBlacklisted && <Badge variant="gold">Blacklisted listing</Badge>}
                 </div>
               </div>
@@ -481,6 +593,11 @@ export function PageDetail() {
               <div style={{ marginTop: 4 }}>
                 <Stars n={5} />
               </div>
+              {isVerified && (
+                <div style={{ marginTop: 12 }}>
+                  <VerifiedHostTrustBadge compact />
+                </div>
+              )}
               <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: "1.2rem 0" }} />
               <FormGroup label="Pick-up Date">
                 <input

@@ -2,13 +2,25 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { PATH } from "../../lib/paths.js";
+import { BRAND } from "../../lib/brand.js";
 
-const initials = (name) => {
-  if (!name) return "??";
-  const p = name.trim().split(/\s+/);
-  if (p.length === 1) return p[0].slice(0, 2).toUpperCase();
-  return (p[0][0] + p[p.length - 1][0]).toUpperCase();
-};
+const navButtonStyle = (active) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "9px 12px",
+  borderRadius: "var(--r)",
+  color: active ? "var(--gold2)" : "rgba(255,255,255,0.65)",
+  background: active ? "rgba(245,158,11,0.12)" : "transparent",
+  fontSize: 13,
+  fontWeight: 500,
+  cursor: "pointer",
+  marginBottom: 2,
+  border: "none",
+  width: "100%",
+  textAlign: "left",
+  fontFamily: "inherit",
+});
 
 /**
  * Only one item should read “active” at a time. Many rows share the same `to` URL; `activeId` names which
@@ -112,8 +124,10 @@ export function Sidebar({ role = "renter" }) {
     if (item.action === "logout") {
       await logout();
       navigate(PATH.home);
+      setMobileOpen(false);
     } else if (item.to) {
       navigate(item.to);
+      setMobileOpen(false);
     }
   };
 
@@ -124,44 +138,16 @@ export function Sidebar({ role = "renter" }) {
     return item.id === currentActiveId;
   };
 
+  const shellRoleLabel = role === "owner" ? "Owner" : "Renter";
+
   const SidebarContent = () => (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ padding: "1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div
-          onClick={() => role === "owner" ? navigate(PATH.ownerDashboard) : navigate(PATH.renterDashboard)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              navigate(role === "owner" ? PATH.ownerDashboard : PATH.renterDashboard);
-            }
-          }}
-          role="link"
-          tabIndex={0}
-          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: role === "owner" ? "var(--teal)" : "var(--gold)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              fontSize: 14,
-              flexShrink: 0,
-            }}
-          >
-            {initials(name)}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{name}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{role === "owner" ? "Vehicle owner" : "Renter account"}</div>
-          </div>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <div style={{ padding: "1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "#fff" }}>{BRAND.domain}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{shellRoleLabel}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 8, fontWeight: 600 }}>{name}</div>
       </div>
-      <nav style={{ padding: "0.8rem", flex: 1, overflowY: "auto" }}>
+      <nav style={{ padding: "0.8rem", flex: 1, overflowY: "auto", minHeight: 0 }}>
         {links.map((item, i) =>
           item.divider ? (
             <div
@@ -171,40 +157,28 @@ export function Sidebar({ role = "renter" }) {
                 fontWeight: 700,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.25)",
-                margin: "1rem 0.4rem 0.4rem",
+                color: "rgba(255,255,255,0.28)",
+                margin: "1rem 0.35rem 0.35rem",
               }}
             >
               {item.divider}
             </div>
           ) : (
-            <div
+            <button
               key={item.id}
-              onClick={() => go(item)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "9px 12px",
-                borderRadius: "var(--r)",
-                color: itemActive(item) ? "var(--gold2)" : "rgba(255,255,255,0.65)",
-                background: itemActive(item) ? "rgba(245,158,11,0.12)" : "transparent",
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-                marginBottom: 2,
-                transition: "all 0.2s",
-              }}
+              type="button"
+              onClick={() => void go(item)}
+              style={navButtonStyle(itemActive(item))}
               onMouseEnter={(e) => {
-                if (!itemActive(item)) e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                if (!itemActive(item)) e.currentTarget.style.background = "rgba(255,255,255,0.06)";
               }}
               onMouseLeave={(e) => {
-                if (!itemActive(item)) e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.background = itemActive(item) ? "rgba(245,158,11,0.12)" : "transparent";
               }}
             >
-              <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{item.icon}</span>
-              {item.label}
-              {item.badge && (
+              <span style={{ fontSize: 16, width: 22, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
+              {item.badge ? (
                 <span
                   style={{
                     marginLeft: "auto",
@@ -218,8 +192,8 @@ export function Sidebar({ role = "renter" }) {
                 >
                   {item.badge}
                 </span>
-              )}
-            </div>
+              ) : null}
+            </button>
           )
         )}
       </nav>
@@ -253,16 +227,40 @@ export function Sidebar({ role = "renter" }) {
       </button>
 
       {mobileOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "var(--slate)" }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 300,
+            background: "var(--slate)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "#fff", fontSize: 24, cursor: "pointer" }}
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              color: "#fff",
+              fontSize: 20,
+              cursor: "pointer",
+              width: 40,
+              height: 40,
+              borderRadius: 8,
+              zIndex: 1,
+            }}
             aria-label="Close sidebar"
           >
             ✕
           </button>
-          <SidebarContent />
+          <div style={{ flex: 1, minHeight: 0, paddingTop: "3rem", boxSizing: "border-box" }}>
+            <SidebarContent />
+          </div>
         </div>
       )}
 
@@ -270,13 +268,14 @@ export function Sidebar({ role = "renter" }) {
         className="hide-mobile"
         style={{
           width: 240,
-          background: "var(--slate2)",
+          background: "var(--slate)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
-          alignSelf: "flex-start",
+          display: "flex",
+          flexDirection: "column",
           position: "sticky",
           top: 64,
-          maxHeight: "calc(100vh - 64px)",
-          overflow: "auto",
+          height: "calc(100vh - 64px)",
+          overflow: "hidden",
           overscrollBehavior: "contain",
         }}
       >

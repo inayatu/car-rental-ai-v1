@@ -42,7 +42,7 @@ const carSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    title: { type: String, required: true, trim: true },
+    title: { type: String, required: true, trim: true, maxlength: 60 },
     brand: { type: String, required: true, trim: true },
     model: { type: String, required: true, trim: true },
     year: { type: Number, required: true, min: 1980 },

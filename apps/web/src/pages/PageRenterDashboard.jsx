@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Btn } from "../components/ui/Btn.jsx";
 import { StatBox } from "../components/ui/StatBox.jsx";
@@ -9,7 +9,7 @@ import { Pagination } from "../components/ui/Pagination.jsx";
 import { api } from "../lib/apiClient.js";
 import { PATH } from "../lib/paths.js";
 import { mainDashboard, shellDashboard } from "../lib/pageLayout.js";
-import { parseRenterBookingTab, renterBookingInTab } from "../lib/bookingTabFilters.js";
+import { parseRenterBookingTab } from "../lib/bookingTabFilters.js";
 
 const TABS = [
   { id: "all", label: "All" },
@@ -27,24 +27,58 @@ export function PageRenterDashboard() {
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
   const [bookings, setBookings] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statTotal, setStatTotal] = useState(0);
+  const [statInProgress, setStatInProgress] = useState(0);
+  const [statDone, setStatDone] = useState(0);
   const [err, setErr] = useState(null);
   const [actionErr, setActionErr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+
+  const refreshStats = useCallback(async () => {
+    try {
+      const [allR, pendR, accR, doneR] = await Promise.all([
+        api.get("/bookings/mine", { params: { limit: 1, page: 1 } }),
+        api.get("/bookings/mine", { params: { tab: "pending", limit: 1, page: 1 } }),
+        api.get("/bookings/mine", { params: { tab: "active", limit: 1, page: 1 } }),
+        api.get("/bookings/mine", { params: { tab: "completed", limit: 1, page: 1 } }),
+      ]);
+      setStatTotal(allR.data?.total ?? 0);
+      setStatInProgress((pendR.data?.total ?? 0) + (accR.data?.total ?? 0));
+      setStatDone(doneR.data?.total ?? 0);
+    } catch {
+      /* stats are non-blocking */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setErr(null);
     setActionErr(null);
     setLoading(true);
     try {
-      const { data } = await api.get("/bookings/mine");
+      const tabParam = tab === "all" ? undefined : tab;
+      const { data } = await api.get("/bookings/mine", {
+        params: {
+          page,
+          limit: PAGE_SIZE,
+          ...(tabParam ? { tab: tabParam } : {}),
+        },
+      });
       setBookings(data?.bookings || []);
+      const tp = data?.totalPages;
+      const t = data?.total ?? 0;
+      setTotalPages(typeof tp === "number" && tp > 0 ? tp : Math.max(1, Math.ceil(t / PAGE_SIZE)));
     } catch (e) {
       setErr(e?.response?.data?.message || e?.message || "Failed to load bookings.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tab, page]);
+
+  useEffect(() => {
+    void refreshStats();
+  }, [refreshStats]);
 
   useEffect(() => {
     void load();
@@ -75,7 +109,7 @@ export function PageRenterDashboard() {
         status: "cancelled",
         cancellationReason: "Cancelled by renter",
       });
-      await load();
+      await Promise.all([load(), refreshStats()]);
     } catch (e) {
       setActionErr(e?.response?.data?.message || e?.message || "Could not cancel.");
     } finally {
@@ -83,17 +117,7 @@ export function PageRenterDashboard() {
     }
   };
 
-  const filtered = useMemo(() => bookings.filter((b) => renterBookingInTab(b, tab)), [bookings, tab]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const paged = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, safePage]);
-
-  const total = bookings.length;
-  const active = bookings.filter((b) => ["requested", "accepted"].includes(b.status)).length;
-  const done = bookings.filter((b) => b.status === "completed").length;
 
   return (
     <div style={shellDashboard}>
@@ -127,9 +151,9 @@ export function PageRenterDashboard() {
             marginBottom: "1.5rem",
           }}
         >
-          <StatBox val={String(total)} label="Total" />
-          <StatBox val={String(active)} label="In progress" color="var(--gold)" />
-          <StatBox val={String(done)} label="Completed" color="var(--teal)" />
+          <StatBox val={String(statTotal)} label="Total" />
+          <StatBox val={String(statInProgress)} label="In progress" color="var(--gold)" />
+          <StatBox val={String(statDone)} label="Completed" color="var(--teal)" />
         </div>
 
         <div
@@ -199,9 +223,9 @@ export function PageRenterDashboard() {
         {loading && <p>Loading…</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-          {!loading && filtered.length === 0 && <p style={{ color: "var(--ink3)" }}>No bookings in this list.</p>}
+          {!loading && bookings.length === 0 && <p style={{ color: "var(--ink3)" }}>No bookings in this list.</p>}
           {!loading &&
-            paged.map((b) => (
+            bookings.map((b) => (
               <RenterBookingCard
                 key={b.id}
                 booking={b}
@@ -211,7 +235,7 @@ export function PageRenterDashboard() {
               />
             ))}
         </div>
-        {!loading && filtered.length > 0 ? (
+        {!loading && bookings.length > 0 ? (
           <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
         ) : null}
       </main>

@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const Booking = require("./booking.model");
 const Car = require("../cars/car.model");
+const User = require("../users/user.model");
 const { Messages, invalidField } = require("../../constants/errorMessages");
+const { listMyBookingsQueryAndSort } = require("./booking.listQuery");
 
 const BLOCKING_BOOKING_STATUSES = new Set(["requested", "accepted"]);
 const ACTIVE_BOOKING_STATUSES = new Set(["requested", "accepted"]);
@@ -142,6 +144,13 @@ async function createBooking(renterId, renterRole, payload) {
     throw err;
   }
 
+  const ownerAccount = await User.findById(car.ownerId).select("verificationStatus role").lean();
+  if (!ownerAccount || ownerAccount.verificationStatus !== "verified") {
+    const err = new Error(Messages.booking.ownerNotVerifiedForBooking);
+    err.status = 409;
+    throw err;
+  }
+
   await assertNoDateOverlap(car._id, startDate, endDate);
 
   const totalDays = calculateTotalDays(startDate, endDate);
@@ -179,24 +188,26 @@ async function createBooking(renterId, renterRole, payload) {
   return booking;
 }
 
-async function listMyBookings(actorId, actorRole) {
-  const query = {};
+async function listMyBookings(actorId, actorRole, options = {}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 20));
+  const skip = (page - 1) * limit;
+  const tab = typeof options.tab === "string" ? options.tab : "";
 
-  if (actorRole === "admin" || actorRole === "govt_staff") {
-    /* staff sees full booking catalog */
-  } else if (actorRole === "renter") {
-    query.renterId = actorId;
-  } else if (actorRole === "owner") {
-    query.ownerId = actorId;
-  } else {
-    query.$or = [{ renterId: actorId }, { ownerId: actorId }];
-  }
+  const { query, sort } = listMyBookingsQueryAndSort(actorId, actorRole, tab);
 
-  return Booking.find(query)
-    .sort({ createdAt: -1 })
-    .populate("carId", BOOKING_CAR_POPULATE_SELECT)
-    .populate("renterId", "name email phone")
-    .populate("ownerId", "name email phone");
+  const [items, total] = await Promise.all([
+    Booking.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate("carId", BOOKING_CAR_POPULATE_SELECT)
+      .populate("renterId", "name email phone")
+      .populate("ownerId", "name email phone"),
+    Booking.countDocuments(query),
+  ]);
+
+  return { items, total, page, limit };
 }
 
 const ADMIN_BOOKING_STATUSES = new Set(["requested", "accepted", "rejected", "cancelled", "completed"]);

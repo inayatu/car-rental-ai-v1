@@ -4,7 +4,9 @@ const {
   carIdParamsSchema,
   moderateCarSchema,
   publicCarListQuerySchema,
+  ownerCarsListQuerySchema,
 } = require("./car.validation");
+const { paginationQuerySchema } = require("../admin/admin.validation");
 const carService = require("./car.service");
 const { processCarUploads } = require("./car-upload.service");
 
@@ -232,9 +234,32 @@ async function createCar(req, res, next) {
 
 async function listMyCars(req, res, next) {
   try {
-    const includeDeleted = String(req.query?.includeDeleted || "") === "1" || String(req.query?.includeDeleted) === "true";
-    const cars = await carService.listOwnerCars(req.user.sub, { includeDeleted });
-    return res.status(200).json({ cars: cars.map(sanitizeCar) });
+    const q = ownerCarsListQuerySchema.parse(req.query || {});
+    const removedOnly =
+      q.removed === true ||
+      q.removed === "1" ||
+      q.removed === "true" ||
+      q.includeDeleted === true ||
+      q.includeDeleted === "1" ||
+      q.includeDeleted === "true";
+
+    const { items, total, page, limit, activeListedCount } = await carService.listOwnerCars(req.user.sub, {
+      page: q.page,
+      limit: q.limit,
+      removedOnly,
+    });
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    const payload = {
+      cars: items.map(sanitizeCar),
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+    if (!removedOnly) {
+      payload.activeListedCount = activeListedCount;
+    }
+    return res.status(200).json(payload);
   } catch (error) {
     return next(error);
   }
@@ -302,8 +327,19 @@ async function restoreMyCar(req, res, next) {
 
 async function listPendingModeration(req, res, next) {
   try {
-    const cars = await carService.listPendingModerationCars();
-    return res.status(200).json({ cars: cars.map(sanitizeCar) });
+    const q = paginationQuerySchema.parse(req.query || {});
+    const { items, total, page, limit } = await carService.listPendingModerationCars({
+      page: q.page,
+      limit: q.limit,
+    });
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    return res.status(200).json({
+      cars: items.map(sanitizeCar),
+      total,
+      page,
+      limit,
+      totalPages,
+    });
   } catch (error) {
     return next(error);
   }

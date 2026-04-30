@@ -26,9 +26,9 @@ const LINK_GROUPS = [
   [
     "Company",
     [
-      ["About us", ""],
-      ["How it works", ""],
-      ["Safety policy", ""],
+      ["About us", PATH.about],
+      ["How it works", PATH.howItWorks],
+      ["Safety policy", PATH.safetyPolicy],
       ["Contact", ""],
     ],
   ],

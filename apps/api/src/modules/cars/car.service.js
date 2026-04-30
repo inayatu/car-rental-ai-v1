@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Car = require("./car.model");
+const User = require("../users/user.model");
 const { Messages, invalidField } = require("../../constants/errorMessages");
 
 const MODERATION_ACTIONS = {
@@ -13,6 +14,14 @@ function ensureValidObjectId(id, fieldName = "id") {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error(invalidField(fieldName));
     err.status = 400;
+    throw err;
+  }
+}
+
+function assertOwnerListingNotBlacklisted(car) {
+  if (car.verification?.status === "blacklisted") {
+    const err = new Error(Messages.car.listingBlacklistedOwnerLocked);
+    err.status = 403;
     throw err;
   }
 }
@@ -46,12 +55,27 @@ async function createCar(ownerId, payload) {
 }
 
 async function listOwnerCars(ownerId, options = {}) {
-  const { includeDeleted = false } = options;
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 20));
+  const skip = (page - 1) * limit;
+  const removedOnly = options.removedOnly === true || options.removedOnly === "1";
+
   const filter = { ownerId };
-  if (!includeDeleted) {
+  if (removedOnly) {
+    filter.isDeleted = true;
+  } else {
     filter.isDeleted = { $ne: true };
   }
-  return Car.find(filter).sort({ createdAt: -1 });
+
+  const [items, total, activeListedCount] = await Promise.all([
+    Car.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+    Car.countDocuments(filter),
+    removedOnly
+      ? Promise.resolve(0)
+      : Car.countDocuments({ ownerId, isDeleted: { $ne: true }, status: "active" }),
+  ]);
+
+  return { items, total, page, limit, activeListedCount };
 }
 
 async function getOwnerCarById(ownerId, carId) {
@@ -67,40 +91,40 @@ async function getOwnerCarById(ownerId, carId) {
   return car;
 }
 
+function buildVerifiedOwnerUpdatePayload(car, updates) {
+  const payload = {};
+  if (updates.basePricePerDay !== undefined) {
+    payload.basePricePerDay = updates.basePricePerDay;
+  }
+  if (updates.currency !== undefined) {
+    payload.currency = updates.currency;
+  }
+  if (updates.status !== undefined) {
+    payload.status = updates.status;
+  }
+  const hasLocationKeys =
+    updates.location !== undefined ||
+    updates.district !== undefined ||
+    updates.city !== undefined;
+  if (hasLocationKeys) {
+    const districtRaw =
+      updates.location != null && typeof updates.location === "object"
+        ? updates.location.district
+        : updates.district;
+    const district =
+      districtRaw !== undefined && districtRaw !== null
+        ? String(districtRaw).trim()
+        : String(car.location?.district || "").trim();
+    payload.location = {
+      district,
+      city: car.location?.city,
+    };
+  }
+  return payload;
+}
+
 async function updateOwnerCar(ownerId, carId, updates) {
   ensureValidObjectId(carId, "car id");
-  const payload = { ...updates };
-  if (Array.isArray(payload.images)) {
-    payload.images = payload.images.slice(0, 5);
-  }
-
-  if (payload.registrationNumber) {
-    payload.registrationNumber = payload.registrationNumber.toUpperCase();
-  }
-
-  const hasModerationRelevantChanges =
-    Boolean(payload.documents) || Boolean(payload.registrationNumber) || Boolean(payload.images);
-
-  if (hasModerationRelevantChanges) {
-    payload.verification = {
-      status: "pending",
-      verifiedBadge: false,
-      verifiedAt: null,
-      verifiedBy: null,
-      notes: "Re-submitted after owner update.",
-      lastActionAt: new Date(),
-      lastActionBy: ownerId,
-      lastActionByRole: "owner",
-    };
-    payload.$push = {
-      moderationHistory: {
-        action: "submitted",
-        by: ownerId,
-        byRole: "owner",
-        reason: "Owner updated details/documents; review required again.",
-      },
-    };
-  }
 
   const car = await Car.findOne({ _id: carId, ownerId });
 
@@ -113,6 +137,55 @@ async function updateOwnerCar(ownerId, carId, updates) {
     const err = new Error(Messages.car.listingRemovedRestoreFirst);
     err.status = 400;
     throw err;
+  }
+
+  assertOwnerListingNotBlacklisted(car);
+
+  const isVerified = car.verification?.status === "verified";
+
+  let payload;
+  if (isVerified) {
+    const uploadedImages = Array.isArray(updates.images) ? updates.images.length : 0;
+    const uploadedDocs = Array.isArray(updates.documents) ? updates.documents.length : 0;
+    if (uploadedImages > 0 || uploadedDocs > 0) {
+      const err = new Error(Messages.car.verifiedListingNoDocChanges);
+      err.status = 400;
+      throw err;
+    }
+    payload = buildVerifiedOwnerUpdatePayload(car, updates);
+  } else {
+    payload = { ...updates };
+    if (Array.isArray(payload.images)) {
+      payload.images = payload.images.slice(0, 5);
+    }
+
+    if (payload.registrationNumber) {
+      payload.registrationNumber = payload.registrationNumber.toUpperCase();
+    }
+
+    const hasModerationRelevantChanges =
+      Boolean(payload.documents) || Boolean(payload.registrationNumber) || Boolean(payload.images);
+
+    if (hasModerationRelevantChanges) {
+      payload.verification = {
+        status: "pending",
+        verifiedBadge: false,
+        verifiedAt: null,
+        verifiedBy: null,
+        notes: "Re-submitted after owner update.",
+        lastActionAt: new Date(),
+        lastActionBy: ownerId,
+        lastActionByRole: "owner",
+      };
+      payload.$push = {
+        moderationHistory: {
+          action: "submitted",
+          by: ownerId,
+          byRole: "owner",
+          reason: "Owner updated details/documents; review required again.",
+        },
+      };
+    }
   }
 
   Object.keys(payload).forEach((key) => {
@@ -133,43 +206,61 @@ async function updateOwnerCar(ownerId, carId, updates) {
 async function deleteOwnerCar(ownerId, carId) {
   ensureValidObjectId(carId, "car id");
 
-  const updated = await Car.findOneAndUpdate(
-    { _id: carId, ownerId, isDeleted: { $ne: true } },
-    { $set: { isDeleted: true, deletedAt: new Date() } },
-    { new: true }
-  );
-  if (!updated) {
+  const car = await Car.findOne({ _id: carId, ownerId, isDeleted: { $ne: true } });
+  if (!car) {
     const err = new Error(Messages.car.notFoundOrAlreadyRemoved);
     err.status = 404;
     throw err;
   }
 
-  return { success: true, soft: true, car: updated };
+  assertOwnerListingNotBlacklisted(car);
+
+  car.isDeleted = true;
+  car.deletedAt = new Date();
+  await car.save();
+
+  return { success: true, soft: true, car };
 }
 
 async function restoreOwnerCar(ownerId, carId) {
   ensureValidObjectId(carId, "car id");
 
-  const car = await Car.findOneAndUpdate(
-    { _id: carId, ownerId, isDeleted: true },
-    { $set: { isDeleted: false, deletedAt: null } },
-    { new: true }
-  );
+  const car = await Car.findOne({ _id: carId, ownerId, isDeleted: true });
   if (!car) {
     const err = new Error(Messages.car.notFoundOrNotRemoved);
     err.status = 404;
     throw err;
   }
+
+  assertOwnerListingNotBlacklisted(car);
+
+  car.isDeleted = false;
+  car.deletedAt = null;
+  await car.save();
+
   return car;
 }
 
-async function listPendingModerationCars() {
-  return Car.find({
+async function listPendingModerationCars(options = {}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 50));
+  const skip = (page - 1) * limit;
+
+  const filter = {
     "verification.status": { $in: ["pending", "unverified"] },
     isDeleted: { $ne: true },
-  })
-    .sort({ createdAt: -1 })
-    .populate("ownerId", "name email phone");
+  };
+
+  const [items, total] = await Promise.all([
+    Car.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("ownerId", "name email phone"),
+    Car.countDocuments(filter),
+  ]);
+
+  return { items, total, page, limit };
 }
 
 async function moderateCar(carId, moderatorId, moderatorRole, action, payload = {}) {
@@ -351,6 +442,12 @@ async function listPublicCars(options) {
     });
   }
 
+  const verifiedOwnerIds = await User.find({
+    role: "owner",
+    verificationStatus: "verified",
+  }).distinct("_id");
+  filter.$and.push({ ownerId: { $in: verifiedOwnerIds } });
+
   const skip = (page - 1) * limit;
   let sortDef = { createdAt: -1 };
   if (sort === "price_asc") {
@@ -385,11 +482,23 @@ async function getPublicCarById(id) {
       { "verification.status": "blacklisted" },
     ],
   })
-    .populate("ownerId", "name")
+    .populate("ownerId", "name role verificationStatus")
     .lean()
     .exec();
 
   if (!car) {
+    const err = new Error(Messages.car.notFound);
+    err.status = 404;
+    throw err;
+  }
+
+  const owner = car.ownerId;
+  if (
+    owner &&
+    typeof owner === "object" &&
+    owner.role === "owner" &&
+    owner.verificationStatus !== "verified"
+  ) {
     const err = new Error(Messages.car.notFound);
     err.status = 404;
     throw err;

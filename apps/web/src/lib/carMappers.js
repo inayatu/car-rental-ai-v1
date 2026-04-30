@@ -1,5 +1,6 @@
 import { resolveAssetUrl } from "./resolveApiUrl.js";
 import { labelForVehicleType } from "./vehicleTypes.js";
+import { truncateCarTitle } from "./carTitleLimits.js";
 
 /** Maps a public list/detail car from the API into the shape CarCard + detail UIs expect. */
 export function mapApiCarToDisplay(car) {
@@ -15,7 +16,7 @@ export function mapApiCarToDisplay(car) {
     : [];
   return {
     id: car.id,
-    name: car.title || [car.brand, car.model].filter(Boolean).join(" ") || "Vehicle",
+    name: truncateCarTitle(car.title || [car.brand, car.model].filter(Boolean).join(" ") || "Vehicle"),
     loc: (() => {
       const d = car.location?.district;
       const c = car.location?.city;

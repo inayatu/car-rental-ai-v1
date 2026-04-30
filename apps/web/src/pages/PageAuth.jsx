@@ -210,9 +210,8 @@ export function PageAuth() {
                 </FormGroup>
                 <FormGroup label="I am a">
                   <select value={role} onChange={(e) => setRole(e.target.value)}>
-                    <option value="renter">Renter</option>
-                    <option value="owner">Owner (list vehicles)</option>
-                    <option value="both">Renter (same as API renter; pick owner above to list)</option>
+                    <option value="renter">Renter (Book vehicles)</option>
+                    <option value="owner">Owner (List vehicles)</option>
                   </select>
                 </FormGroup>
                 <FormGroup label="Password (8+ characters)">

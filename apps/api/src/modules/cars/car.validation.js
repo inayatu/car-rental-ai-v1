@@ -26,7 +26,7 @@ const carDocumentSchema = z.object({
 });
 
 const createCarSchema = z.object({
-  title: z.string().min(2),
+  title: z.string().trim().min(2).max(60),
   brand: z.string().min(2),
   model: z.string().min(1),
   year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
@@ -77,10 +77,19 @@ const publicCarListQuerySchema = z
   })
   .strip();
 
+const ownerCarsListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  removed: z.union([z.literal("1"), z.literal("true"), z.boolean()]).optional(),
+  // Legacy alias for `removed` (soft-deleted inventory only).
+  includeDeleted: z.union([z.literal("1"), z.literal("true"), z.boolean()]).optional(),
+});
+
 module.exports = {
   createCarSchema,
   updateCarSchema,
   carIdParamsSchema,
   moderateCarSchema,
   publicCarListQuerySchema,
+  ownerCarsListQuerySchema,
 };
