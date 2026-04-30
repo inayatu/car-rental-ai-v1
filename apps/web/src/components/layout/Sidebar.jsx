@@ -43,6 +43,10 @@ function linksForRole(role) {
       { divider: "Earnings" },
       { id: "owner-earn", icon: "💰", label: "Earnings", to: PATH.ownerDashboard },
       { id: "owner-reports", icon: "📊", label: "Reports", to: PATH.ownerDashboard },
+      { divider: "Help" },
+      { id: "help-how", icon: "📘", label: "How it works", to: PATH.howItWorks },
+      { id: "help-about", icon: "ℹ️", label: "About us", to: PATH.about },
+      { id: "help-safety", icon: "🛡️", label: "Safety policy", to: PATH.safetyPolicy },
       { divider: "Account" },
       { id: "owner-profile", icon: "👤", label: "Profile & documents", to: PATH.profile },
       { id: "owner-logout", icon: "🚪", label: "Logout", action: "logout" },
@@ -57,6 +61,10 @@ function linksForRole(role) {
     { id: "r-active", icon: "📅", label: "Confirmed", to: `${PATH.renterDashboard}?tab=active` },
     { id: "r-done", icon: "✅", label: "Completed", to: `${PATH.renterDashboard}?tab=completed` },
     { id: "r-decl", icon: "⛔", label: "Declined", to: `${PATH.renterDashboard}?tab=declined` },
+    { divider: "Help" },
+    { id: "help-how", icon: "📘", label: "How it works", to: PATH.howItWorks },
+    { id: "help-about", icon: "ℹ️", label: "About us", to: PATH.about },
+    { id: "help-safety", icon: "🛡️", label: "Safety policy", to: PATH.safetyPolicy },
     { divider: "Account" },
     { id: "r-profile", icon: "👤", label: "My profile", to: PATH.profile },
     { id: "r-out", icon: "🚪", label: "Logout", action: "logout" },
@@ -78,6 +86,9 @@ function isActivePath(pathname, match) {
  * @param {"renter" | "owner"} role
  */
 function activeIdForPath(pathname, search, role) {
+  if (pathname === PATH.howItWorks) return "help-how";
+  if (pathname === PATH.about) return "help-about";
+  if (pathname === PATH.safetyPolicy) return "help-safety";
   if (pathname === PATH.profile) {
     return role === "owner" ? "owner-profile" : "r-profile";
   }

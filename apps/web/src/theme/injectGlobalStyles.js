@@ -54,6 +54,79 @@ const CSS = `
   @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
   @keyframes ticker   { from { transform:translateX(0); } to { transform:translateX(-50%); } }
   @keyframes spin     { to { transform:rotate(360deg); } }
+  @keyframes hero-cursor-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes gb-loader-logo-nudge {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.03); }
+  }
+  @keyframes gb-loader-wheel-spin {
+    to { transform: rotate(-360deg); }
+  }
+  @keyframes gb-loader-wheels-sway {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+  }
+
+  .gb-site-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    background: var(--slate);
+  }
+  .gb-site-loader-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .gb-site-loader-mark-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .gb-site-loader-logo {
+    animation: gb-loader-logo-nudge 1.9s ease-in-out infinite;
+    filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.4));
+  }
+  .gb-site-loader-wheels {
+    display: flex;
+    gap: 1.15rem;
+    margin-top: 0.45rem;
+    animation: gb-loader-wheels-sway 1.05s ease-in-out infinite;
+  }
+  .gb-loader-wheel {
+    display: block;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--gold2) 0%, #0891b2 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    animation: gb-loader-wheel-spin 0.52s linear infinite;
+  }
+  .gb-loader-wheel:nth-child(2) {
+    animation-delay: -0.26s;
+    animation-direction: reverse;
+  }
+  .gb-site-loader-caption {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.42);
+    letter-spacing: 0.06em;
+    margin: 0;
+    margin-top: 0.25rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gb-site-loader-logo,
+    .gb-site-loader-wheels,
+    .gb-loader-wheel {
+      animation: none !important;
+    }
+  }
 
   .fade-up    { animation: fadeUp 0.6s ease both; }
   .slide-in   { animation: slideIn 0.5s ease both; }
@@ -156,13 +229,17 @@ const CSS = `
     display: grid;
     grid-template-columns: 1fr;
     gap: 2rem;
-    align-items: center;
+    align-items: start;
   }
   @media (min-width: 720px) {
     .gb-hero-2 {
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
       gap: 3rem;
+      align-items: start;
     }
+  }
+  .gb-hero-2 > * {
+    min-width: 0;
   }
 
   /* —— Home: CTA 2-up —— */

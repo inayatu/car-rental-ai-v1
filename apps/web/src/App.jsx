@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Nav } from "./components/layout/Nav.jsx";
 import { RequireAuth } from "./components/auth/RequireAuth.jsx";
@@ -18,6 +18,10 @@ import { PageRenterDashboard } from "./pages/PageRenterDashboard.jsx";
 import { PageAbout } from "./pages/PageAbout.jsx";
 import { PageHowItWorks } from "./pages/PageHowItWorks.jsx";
 import { PageSafetyPolicy } from "./pages/PageSafetyPolicy.jsx";
+import { GbTripSiteLoader } from "./components/brand/GbTripSiteLoader.jsx";
+
+/** Minimum time the branded loader stays visible on first paint (ms). */
+const BOOT_SPLASH_MIN_MS = 720;
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -29,21 +33,19 @@ function ScrollToTop() {
 
 export default function App() {
   const { user, status } = useAuth();
+  const mountedAt = useRef(Date.now());
+  const [bootComplete, setBootComplete] = useState(false);
 
-  if (status !== "ready") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0d1b2a",
-        }}
-      >
-        <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 15 }}>Loading…</p>
-      </div>
-    );
+  useEffect(() => {
+    if (status !== "ready") return undefined;
+    const elapsed = Date.now() - mountedAt.current;
+    const wait = Math.max(0, BOOT_SPLASH_MIN_MS - elapsed);
+    const t = window.setTimeout(() => setBootComplete(true), wait);
+    return () => window.clearTimeout(t);
+  }, [status]);
+
+  if (!bootComplete) {
+    return <GbTripSiteLoader />;
   }
 
   return (

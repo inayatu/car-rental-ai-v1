@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: "GB Trip",
         description:
           "Book verified cars, jeeps, and SUVs from trusted local owners across Gilgit Baltistan.",
-        theme_color: "#1a33b3",
+        theme_color: "#0d1b2a",
         background_color: "#f3f5fb",
         display: "standalone",
         start_url: "/",

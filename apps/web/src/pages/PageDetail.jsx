@@ -65,8 +65,8 @@ function VerifiedHostTrustBadge({ compact }) {
           padding: "5px 12px 5px 6px",
           borderRadius: 999,
           background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-          border: "1px solid rgba(15, 118, 110, 0.28)",
-          boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+          border: "none",
+          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.05)",
         }}
       >
         <VerifiedSeal size={26} />
@@ -92,32 +92,33 @@ function VerifiedHostTrustBadge({ compact }) {
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: 12,
-        padding: "12px 14px",
-        borderRadius: 12,
-        background: "linear-gradient(175deg, #ffffff 0%, #f1f5f9 100%)",
-        border: "1px solid rgba(15, 118, 110, 0.22)",
-        boxShadow: "0 2px 12px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255,255,255, 0.9)",
-        maxWidth: 340,
+        gap: 10,
+        padding: "8px 10px",
+        borderRadius: "var(--r)",
+        background: "linear-gradient(180deg, rgba(15, 118, 110, 0.06) 0%, rgba(248, 250, 252, 0.65) 100%)",
+        border: "none",
+        boxShadow: "none",
+        width: "100%",
+        maxWidth: "min(100%, 26rem)",
       }}
     >
-      <VerifiedSeal size={44} />
+      <VerifiedSeal size={32} />
       <div style={{ minWidth: 0 }}>
         <div
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 700,
-            color: "#134e4a",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.25,
+            color: "#0f766e",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.2,
           }}
         >
           Verified host
         </div>
-        <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--ink3)", lineHeight: 1.5 }}>
-          This owner’s identity and listing passed review by{" "}
-          <strong style={{ color: "var(--ink2)", fontWeight: 600 }}>{BRAND.domain}</strong> before the vehicle appeared in search — similar to a checked host profile on major marketplaces.
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--ink3)", lineHeight: 1.45 }}>
+          Listing and owner reviewed by{" "}
+          <strong style={{ color: "var(--ink2)", fontWeight: 600 }}>{BRAND.domain}</strong> before search — same trust idea as verified hosts on leading platforms.
         </p>
       </div>
     </div>

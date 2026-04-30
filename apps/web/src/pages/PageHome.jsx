@@ -12,6 +12,7 @@ import { api } from "../lib/apiClient.js";
 import { mapApiCarToDisplay } from "../lib/carMappers.js";
 import { PATH } from "../lib/paths.js";
 import { BRAND } from "../lib/brand.js";
+import { HeroTypingHeadline } from "../components/home/HeroTypingHeadline.jsx";
 
 const tickerText = [
   "Hunza Valley",
@@ -140,23 +141,7 @@ export function PageHome() {
                 />
                 Gilgit Baltistan · {BRAND.domain}
               </div>
-              <h1
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "clamp(3rem,5.5vw,5.8rem)",
-                  fontWeight: 800,
-                  lineHeight: 0.95,
-                  letterSpacing: "-2px",
-                  color: "#fff",
-                  marginBottom: "1.4rem",
-                }}
-              >
-                Explore the
-                <br />
-                <em style={{ color: "var(--gold2)" }}>Karakoram</em>
-                <br />
-                on your terms
-              </h1>
+              <HeroTypingHeadline />
               <p
                 style={{
                   fontSize: 16,
@@ -621,7 +606,7 @@ export function PageHome() {
             <Btn variant="gold" size="lg" onClick={() => navigate(PATH.login)}>
               List My Vehicle →
             </Btn>
-            <Btn variant="outline-white" size="lg">
+            <Btn variant="outline-white" size="lg" onClick={() => navigate(PATH.howItWorks)}>
               Learn How It Works
             </Btn>
           </div>
